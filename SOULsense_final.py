@@ -1,6 +1,7 @@
 import sqlite3
 import tkinter as tk
 from tkinter import messagebox
+import random
 
 class SoulSenseApp:
     def __init__(self, root):
@@ -11,14 +12,11 @@ class SoulSenseApp:
         self.age = None
         self.current_question = 0
         self.responses = []
+        self.num_questions = 15
         
-        # Setup database
         self.setup_database()
-        
-        # Load questions
         self.load_questions()
         
-        # Initialize journal
         try:
             from journal_feature import JournalFeature
             self.journal = JournalFeature(root)
@@ -37,40 +35,47 @@ class SoulSenseApp:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT,
             age INTEGER,
-            total_score INTEGER
+            total_score INTEGER,
+            normalized_score INTEGER,
+            num_questions INTEGER
         )
         """)
         self.conn.commit()
 
     def load_questions(self):
-        self.questions = []
         try:
             with open('question_bank.txt', 'r') as f:
-                all_questions = [line.strip() for line in f if line.strip()]
-                self.questions = all_questions[:20]  # First 20 questions
+                self.all_questions = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
             messagebox.showerror("Error", "question_bank.txt file not found!")
             self.root.quit()
+    
+    def select_questions(self):
+        self.questions = random.sample(self.all_questions, min(self.num_questions, len(self.all_questions)))
 
     def create_username_screen(self):
         self.clear_screen()
         
-        # Title
-        title = tk.Label(self.root, text="Soul Sense EQ Test", 
-                        font=("Arial", 18, "bold"), fg="blue")
-        title.pack(pady=20)
+        tk.Label(self.root, text="Soul Sense EQ Test", font=("Arial", 18, "bold"), fg="blue").pack(pady=20)
         
-        # Name input
         tk.Label(self.root, text="Enter Your Name:", font=("Arial", 14)).pack(pady=10)
         self.name_entry = tk.Entry(self.root, font=("Arial", 14), width=25)
         self.name_entry.pack(pady=5)
         
-        # Age input
         tk.Label(self.root, text="Enter Your Age (optional):", font=("Arial", 14)).pack(pady=10)
         self.age_entry = tk.Entry(self.root, font=("Arial", 14), width=25)
         self.age_entry.pack(pady=5)
         
-        # Start button
+        tk.Label(self.root, text="Number of Questions:", font=("Arial", 14)).pack(pady=10)
+        self.question_var = tk.IntVar(value=15)
+        
+        question_frame = tk.Frame(self.root)
+        question_frame.pack(pady=5)
+        
+        for num in [10, 12, 15]:
+            tk.Radiobutton(question_frame, text=f"{num} questions", variable=self.question_var, 
+                         value=num, font=("Arial", 12)).pack(side=tk.LEFT, padx=10)
+        
         tk.Button(self.root, text="Start Test", command=self.start_test, 
                  font=("Arial", 14), bg="green", fg="white", width=15).pack(pady=30)
 
@@ -92,6 +97,8 @@ class SoulSenseApp:
                 messagebox.showwarning("Input Error", "Age must be a number.")
                 return
         
+        self.num_questions = self.question_var.get()
+        self.select_questions()
         self.current_question = 0
         self.responses = []
         self.show_question()
@@ -100,19 +107,12 @@ class SoulSenseApp:
         self.clear_screen()
         
         if self.current_question < len(self.questions):
-            # Progress indicator
-            progress = tk.Label(self.root, 
-                              text=f"Question {self.current_question + 1} of {len(self.questions)}", 
-                              font=("Arial", 12), fg="gray")
-            progress.pack(pady=10)
+            tk.Label(self.root, text=f"Question {self.current_question + 1} of {len(self.questions)}", 
+                    font=("Arial", 12), fg="gray").pack(pady=10)
             
-            # Question text
-            q_text = self.questions[self.current_question]
-            question_label = tk.Label(self.root, text=q_text, 
-                                    wraplength=500, font=("Arial", 14), justify="center")
-            question_label.pack(pady=20)
+            tk.Label(self.root, text=self.questions[self.current_question], 
+                    wraplength=500, font=("Arial", 14), justify="center").pack(pady=20)
             
-            # Answer options
             self.answer_var = tk.IntVar()
             
             options_frame = tk.Frame(self.root)
@@ -122,7 +122,6 @@ class SoulSenseApp:
                 tk.Radiobutton(options_frame, text=text, variable=self.answer_var, 
                              value=val, font=("Arial", 12)).pack(anchor="w", pady=5)
             
-            # Next button
             tk.Button(self.root, text="Next", command=self.save_answer, 
                      font=("Arial", 12), bg="blue", fg="white", width=10).pack(pady=30)
         else:
@@ -138,49 +137,41 @@ class SoulSenseApp:
             self.show_question()
 
     def finish_test(self):
-        total_score = sum(self.responses)
+        raw_score = sum(self.responses)
+        normalized_score = round((raw_score / (self.num_questions * 4)) * 80)
         
-        # Store score in database
-        self.cursor.execute("INSERT INTO scores (username, age, total_score) VALUES (?, ?, ?)", 
-                           (self.username, self.age, total_score))
+        self.cursor.execute("INSERT INTO scores (username, age, total_score, normalized_score, num_questions) VALUES (?, ?, ?, ?, ?)", 
+                           (self.username, self.age, raw_score, normalized_score, self.num_questions))
         self.conn.commit()
         
-        # Determine interpretation
-        if total_score >= 65:
+        if normalized_score >= 65:
             interpretation = "Excellent Emotional Intelligence!"
             color = "green"
-        elif total_score >= 50:
+        elif normalized_score >= 50:
             interpretation = "Good Emotional Intelligence."
             color = "blue"
-        elif total_score >= 35:
+        elif normalized_score >= 35:
             interpretation = "Average Emotional Intelligence."
             color = "orange"
         else:
             interpretation = "You may want to work on your Emotional Intelligence."
             color = "red"
         
-        self.show_results(total_score, interpretation, color)
+        self.show_results(raw_score, normalized_score, interpretation, color)
 
-    def show_results(self, total_score, interpretation, color):
+    def show_results(self, raw_score, normalized_score, interpretation, color):
         self.clear_screen()
         
-        # Results display
-        tk.Label(self.root, text="Test Complete!", 
-                font=("Arial", 18, "bold"), fg="blue").pack(pady=20)
-        
-        tk.Label(self.root, text=f"Thank you, {self.username}!", 
-                font=("Arial", 16)).pack(pady=10)
-        
-        tk.Label(self.root, text=f"Your EQ Score: {total_score} / 80", 
+        tk.Label(self.root, text="Test Complete!", font=("Arial", 18, "bold"), fg="blue").pack(pady=20)
+        tk.Label(self.root, text=f"Thank you, {self.username}!", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text=f"Questions: {self.num_questions} | Raw: {raw_score}/{self.num_questions * 4}", 
+                font=("Arial", 12), fg="gray").pack(pady=5)
+        tk.Label(self.root, text=f"EQ Score: {normalized_score} / 80", 
                 font=("Arial", 16, "bold")).pack(pady=10)
+        tk.Label(self.root, text=interpretation, font=("Arial", 14), fg=color).pack(pady=10)
         
-        tk.Label(self.root, text=interpretation, 
-                font=("Arial", 14), fg=color).pack(pady=10)
-        
-        # Show all results in console
         self.show_all_results()
         
-        # Buttons
         button_frame = tk.Frame(self.root)
         button_frame.pack(pady=30)
         
@@ -195,26 +186,26 @@ class SoulSenseApp:
                  font=("Arial", 12), bg="red", fg="white", width=12).pack(side=tk.LEFT, padx=10)
 
     def show_all_results(self):
-        print("\n" + "="*50)
-        print("           ALL EQ TEST RESULTS")
-        print("="*50)
-        print(f"{'Username':<20} {'Age':<10} {'Score':<10}")
-        print("-" * 50)
+        print(f"\n{'='*50}")
+        print("ALL EQ TEST RESULTS")
+        print(f"{'='*50}")
+        print(f"{'Name':<15} {'Age':<5} {'Q#':<5} {'Raw':<8} {'Norm':<8}")
+        print(f"{'-'*50}")
         
-        self.cursor.execute("SELECT username, age, total_score FROM scores ORDER BY rowid DESC")
+        self.cursor.execute("SELECT username, age, total_score, normalized_score, num_questions FROM scores ORDER BY rowid DESC")
         rows = self.cursor.fetchall()
         
         for row in rows:
-            age_display = str(row[1]) if row[1] is not None else "N/A"
-            print(f"{row[0]:<20} {age_display:<10} {row[2]:<10}")
+            age = str(row[1]) if row[1] else "N/A"
+            norm = row[3] if len(row) > 3 and row[3] else "N/A"
+            questions = row[4] if len(row) > 4 and row[4] else "N/A"
+            print(f"{row[0]:<15} {age:<5} {questions:<5} {row[2]:<8} {norm:<8}")
         
-        print("="*50)
+        print(f"{'='*50}")
 
     def open_journal(self):
         if self.journal:
             self.journal.open_journal_window(self.username)
-        else:
-            messagebox.showinfo("Info", "Journal feature not available")
 
     def exit_test(self):
         self.conn.close()
