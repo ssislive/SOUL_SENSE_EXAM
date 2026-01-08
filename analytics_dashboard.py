@@ -2,8 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from datetime import datetime
 from collections import Counter
-from app.db import get_session
-from app.models import Score, JournalEntry
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import matplotlib.dates as mdates
 
 class AnalyticsDashboard:
     def __init__(self, parent_root, username):
@@ -38,53 +40,129 @@ class AnalyticsDashboard:
         self.show_insights(insights_frame)
         
     def show_eq_trends(self, parent):
-        """Show EQ score trends"""
-        session = get_session()
-        try:
-            # Query only the total_score
-            rows = session.query(Score.total_score)\
-                .filter_by(username=self.username)\
-                .order_by(Score.id)\
-                .all()
-            scores = [r[0] for r in rows]
-        finally:
-            session.close()
+        """Show EQ score trends with matplotlib graph"""
+        conn = sqlite3.connect("soulsense_db")
+        cursor = conn.cursor()
+        cursor.execute("""
+        SELECT total_score, timestamp, id 
+        FROM scores 
+        WHERE username = ? 
+        ORDER BY id
+        """, (self.username,))
+        data = cursor.fetchall()
+        conn.close()
         
-        if not scores:
+        if not data:
             tk.Label(parent, text="No EQ data available", font=("Arial", 14)).pack(pady=50)
             return
-            
-        tk.Label(parent, text="📈 EQ Score Progress", font=("Arial", 14, "bold")).pack(pady=10)
         
-        # Stats
-        stats_frame = tk.Frame(parent)
+        scores = [row[0] for row in data]
+        timestamps = []
+        
+        # Parse timestamps, handle missing ones
+        for i, row in enumerate(data):
+            if row[1]:
+                try:
+                    timestamps.append(datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S"))
+                except:
+                    timestamps.append(datetime.now())
+            else:
+                timestamps.append(datetime.now())
+        
+        tk.Label(parent, text="📈 EQ Score Progress Over Time", 
+                font=("Arial", 14, "bold")).pack(pady=10)
+        
+        # Stats frame
+        stats_frame = tk.Frame(parent, bg="#f0f0f0", relief=tk.RIDGE, bd=2)
         stats_frame.pack(fill=tk.X, padx=20, pady=10)
         
-        tk.Label(stats_frame, text=f"Total Tests: {len(scores)}", font=("Arial", 12)).pack(anchor="w")
-        tk.Label(stats_frame, text=f"Latest Score: {scores[-1]}", font=("Arial", 12)).pack(anchor="w")
-        tk.Label(stats_frame, text=f"Best Score: {max(scores)}", font=("Arial", 12)).pack(anchor="w")
-        tk.Label(stats_frame, text=f"Average: {sum(scores)/len(scores):.1f}", font=("Arial", 12)).pack(anchor="w")
+        # Create two columns for stats
+        left_col = tk.Frame(stats_frame, bg="#f0f0f0")
+        left_col.pack(side=tk.LEFT, padx=20, pady=10)
+        
+        right_col = tk.Frame(stats_frame, bg="#f0f0f0")
+        right_col.pack(side=tk.LEFT, padx=20, pady=10)
+        
+        tk.Label(left_col, text=f"Total Attempts: {len(scores)}", 
+                font=("Arial", 11, "bold"), bg="#f0f0f0").pack(anchor="w", pady=2)
+        tk.Label(left_col, text=f"Latest Score: {scores[-1]}", 
+                font=("Arial", 11), bg="#f0f0f0").pack(anchor="w", pady=2)
+        tk.Label(left_col, text=f"Best Score: {max(scores)}", 
+                font=("Arial", 11), bg="#f0f0f0", fg="green").pack(anchor="w", pady=2)
+        
+        tk.Label(right_col, text=f"First Score: {scores[0]}", 
+                font=("Arial", 11), bg="#f0f0f0").pack(anchor="w", pady=2)
+        tk.Label(right_col, text=f"Average Score: {sum(scores)/len(scores):.1f}", 
+                font=("Arial", 11), bg="#f0f0f0").pack(anchor="w", pady=2)
         
         if len(scores) > 1:
-            improvement = ((scores[-1] - scores[0]) / scores[0]) * 100
-            color = "green" if improvement > 0 else "red"
-            tk.Label(stats_frame, text=f"Improvement: {improvement:.1f}%", 
-                    font=("Arial", 12, "bold"), fg=color).pack(anchor="w")
+            improvement = scores[-1] - scores[0]
+            improvement_pct = (improvement / scores[0]) * 100
+            color = "green" if improvement > 0 else "red" if improvement < 0 else "blue"
+            symbol = "↑" if improvement > 0 else "↓" if improvement < 0 else "→"
+            tk.Label(right_col, text=f"Progress: {symbol} {improvement:+d} ({improvement_pct:+.1f}%)", 
+                    font=("Arial", 11, "bold"), bg="#f0f0f0", fg=color).pack(anchor="w", pady=2)
         
-        # Simple chart
-        chart_frame = tk.Frame(parent)
-        chart_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        # Create matplotlib figure
+        fig = Figure(figsize=(6, 4), dpi=80)
+        ax = fig.add_subplot(111)
         
-        chart_text = tk.Text(chart_frame, height=8, font=("Courier", 10))
-        chart_text.pack(fill=tk.BOTH, expand=True)
+        # Plot line graph
+        ax.plot(range(1, len(scores) + 1), scores, 
+               marker='o', linestyle='-', linewidth=2, markersize=8,
+               color='#4CAF50', markerfacecolor='#2196F3', 
+               markeredgewidth=2, markeredgecolor='#1976D2')
         
-        max_score = max(scores)
+        # Fill area under line
+        ax.fill_between(range(1, len(scores) + 1), scores, alpha=0.3, color='#4CAF50')
+        
+        # Formatting
+        ax.set_xlabel('Attempt Number', fontsize=11, fontweight='bold')
+        ax.set_ylabel('EQ Score', fontsize=11, fontweight='bold')
+        ax.set_title('Your EQ Progress Journey', fontsize=12, fontweight='bold', pad=15)
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.set_xticks(range(1, len(scores) + 1))
+        
+        # Add value labels on points
         for i, score in enumerate(scores):
-            bar_length = int((score / max_score) * 20)
-            bar = "█" * bar_length
-            chart_text.insert(tk.END, f"Test {i+1:2d}: {bar} {score}\n")
+            ax.annotate(str(score), 
+                       xy=(i + 1, score), 
+                       xytext=(0, 10),
+                       textcoords='offset points',
+                       ha='center',
+                       fontsize=9,
+                       fontweight='bold',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
         
-        chart_text.config(state=tk.DISABLED)
+        fig.tight_layout()
+        
+        # Embed in tkinter
+        canvas = FigureCanvasTkAgg(fig, parent)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        # Add trend analysis
+        if len(scores) >= 3:
+            trend_frame = tk.Frame(parent, bg="#e3f2fd", relief=tk.RIDGE, bd=2)
+            trend_frame.pack(fill=tk.X, padx=20, pady=10)
+            
+            tk.Label(trend_frame, text="📊 Trend Analysis", 
+                    font=("Arial", 11, "bold"), bg="#e3f2fd").pack(pady=5)
+            
+            recent_trend = sum(scores[-3:]) / 3 - sum(scores[:3]) / 3
+            if recent_trend > 5:
+                trend_msg = "🎉 Strong upward trend! You're making excellent progress!"
+            elif recent_trend > 0:
+                trend_msg = "📈 Positive trend! Keep up the good work!"
+            elif recent_trend < -5:
+                trend_msg = "💪 Scores declining. Focus on emotional awareness practices."
+            elif recent_trend < 0:
+                trend_msg = "📉 Slight decline. Consider reviewing past strategies."
+            else:
+                trend_msg = "⚖️ Stable scores. Ready for the next breakthrough!"
+            
+            tk.Label(trend_frame, text=trend_msg, 
+                    font=("Arial", 10), bg="#e3f2fd", wraplength=500).pack(pady=5)
         
     def show_journal_analytics(self, parent):
         """Show journal analytics"""

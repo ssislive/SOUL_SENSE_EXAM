@@ -18,3 +18,7 @@ pytest>=6.0.0
 
 # Python 3.6+ recommended
 
+# External packages for visualization
+matplotlib>=3.5.0
+
+# Python 3.6+ recommended
