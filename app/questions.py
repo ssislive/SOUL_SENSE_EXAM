@@ -127,7 +127,9 @@ def _get_cached_questions_from_db(age: Optional[int] = None) -> List[Tuple[int, 
         questions = query.with_entities(
             Question.id, 
             Question.question_text, 
-            Question.tooltip
+            Question.tooltip,
+            Question.min_age,
+            Question.max_age
         ).order_by(Question.id).all()
         
         # Convert to list of tuples

@@ -47,9 +47,70 @@ The journal feature allows users to:
 
 **AI Analysis Capabilities:**
 
-- **Sentiment Scoring:** Analyzes positive/negative emotional tone
+- **Sentiment Scoring:** Analyzes positive/negative emotional tone using NLTK's VADER
 - **Pattern Detection:** Identifies stress indicators, relationship focus, growth mindset, and self-reflection
 - **Emotional Tracking:** Monitors emotional trends over time
+
+---
+
+## 🧠 Sentiment Analysis Integration
+
+### Overview
+
+Soul Sense integrates **NLTK's VADER (Valence Aware Dictionary and sEntiment Reasoner)** sentiment analysis into both the EQ test and journal features, providing a more comprehensive understanding of users' emotional states.
+
+### How It Helps Users
+
+#### 1. **Captures Emotional Context Beyond Multiple Choice**
+
+- MCQ questions only capture structured responses (Never/Sometimes/Often/Always)
+- Open-ended reflection reveals **actual emotional state** in the user's own words
+- Detects disconnect between quantitative scores and qualitative feelings
+
+#### 2. **More Nuanced Risk Assessment**
+
+The AI Analysis considers:
+
+- **Quantitative data**: EQ scores (structured responses)
+- **Qualitative data**: Sentiment score from written reflection (-100 to +100)
+
+This dual analysis provides insights like:
+
+- `High EQ + Negative Sentiment` = Good skills but currently struggling
+- `Low EQ + Positive Sentiment` = Room for growth but good emotional resilience
+
+#### 3. **Personalized Recommendations**
+
+Based on sentiment ranges:
+
+- **Negative (-20 to -100)**: Suggests journaling, professional support, stress management
+- **Neutral (-20 to +20)**: Encourages continued practice
+- **Positive (+20 to +100)**: Reinforces strengths, suggests mentorship
+
+#### 4. **Validation & Empathy**
+
+- Users feel heard when their written reflection is analyzed
+- System acknowledges current emotional state
+- Creates more human interaction vs. just numbers
+
+### Technical Implementation
+
+**VADER Features:**
+
+- ✅ Understands negation: "I am NOT happy" → negative
+- ✅ Detects intensity: "devastatingly sad" vs. "a bit sad"
+- ✅ Works on casual, everyday language
+- ✅ Real-time analysis with no external API calls
+
+### Where Results Are Shown
+
+1. **Results Dashboard**: Displays sentiment score alongside EQ score
+2. **AI Analysis Popup**: Comprehensive analysis with:
+   - Risk level and confidence
+   - Sentiment score interpretation
+   - Top influencing factors
+   - Personalized recommendations based on both EQ and sentiment
+3. **Journal Analytics**: Tracks sentiment trends over time (when using Daily Journal)
 
 ---
 
@@ -189,6 +250,38 @@ Launch the SoulSense interface:
 ```bash
 python -m app.main
 ```
+
+## 🛠️ Troubleshooting & Developer Notes
+
+### Common Issues & Fixes
+
+1.  **"Failed to fetch questions from DB" / `KeyError: min_age`**
+
+    - **Cause**: Database schema is outdated (missing columns in `QuestionCache`).
+    - **Fix**: Run migration or reset database:
+      ```bash
+      python -m scripts.fix_db
+      python -m scripts.load_questions
+      ```
+
+2.  **`ImportError: cannot import name 'get_session' from 'app.models'`**
+
+    - **Fix**: This project strictly separates DB connection logic (`app.db`) from models (`app.models`). Ensure you import `get_session` from `app.db`.
+
+3.  **Application Freeze on Startup**
+
+    - **Cause**: Matplotlib trying to use an interactive backend (TkAgg) conflicting with Tkinter main loop.
+    - **Fix**: Ensure `matplotlib.use('Agg')` is called _before_ importing `pyplot`.
+
+4.  **`ObjectNotExecutableError`**
+    - **Cause**: SQLAlchemy 2.0+ requires raw SQL to be wrapped in `text()`.
+    - **Fix**: Use `from sqlalchemy import text` and wrap strings: `connection.execute(text("SELECT ..."))`.
+
+### For Contributors
+
+- Always install new dependencies via `pip install -r requirements.txt`.
+- If you change the database models, generate a migration: `python -m alembic revision --autogenerate -m "message"`.
+- This project uses **SQLAlchemy 2.0** syntax. Avoid legacy query patterns.
 
 > **Note:** Do not use `npm run dev`. This is a pure Python application.
 

@@ -1,8 +1,10 @@
-# analytics_dashboard.py - COMPLETE FIXED VERSION
+# analytics_dashboard.py - COMPLETE FIXED VERSION (Merged)
 import tkinter as tk
 from tkinter import ttk
 from datetime import datetime
 from collections import Counter
+import matplotlib
+matplotlib.use("Agg") # Prevent GUI mainloop conflicts
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -10,9 +12,9 @@ import matplotlib.dates as mdates
 import json
 import os
 import sqlite3
-
-# REMOVE THIS LINE - it's causing the error
-# from app.models import get_session, Score, JournalEntry
+from app.models import Score, JournalEntry
+from app.db import get_session, get_connection
+from app.time_based_analysis import time_analyzer
 
 class AnalyticsDashboard:
     def __init__(self, parent_root, username):
@@ -40,10 +42,10 @@ class AnalyticsDashboard:
         notebook = ttk.Notebook(dashboard)
         notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Correlation Analysis Tab (NEW)
+        # Correlation Analysis Tab (NEW from Upstream)
         correlation_frame = ttk.Frame(notebook)
         notebook.add(correlation_frame, text="🔗 Correlation")
-        self.show_correlation_analysis(correlation_frame)  # NEW METHOD
+        self.show_correlation_analysis(correlation_frame)
             
         # EQ Trends
         eq_frame = ttk.Frame(notebook)
@@ -106,7 +108,7 @@ class AnalyticsDashboard:
                 widget.destroy()
             
             # Get EQ scores
-            conn = sqlite3.connect("soulsense_db")
+            conn = get_connection()
             cursor = conn.cursor()
             
             # First, check what columns exist in the scores table
@@ -284,37 +286,28 @@ class AnalyticsDashboard:
     # ========== EXISTING METHODS (UPDATED) ==========
     def show_eq_trends(self, parent):
         """Show EQ score trends with matplotlib graph"""
-        conn = sqlite3.connect("soulsense_db")
+        conn = get_connection()
         cursor = conn.cursor()
-        
-        # Check what columns exist
-        cursor.execute("PRAGMA table_info(scores)")
-        columns = [col[1] for col in cursor.fetchall()]
-        
-        # Build query based on available columns
-        if 'timestamp' in columns:
+        try:
             cursor.execute("""
-                SELECT total_score, timestamp, id 
-                FROM scores 
-                WHERE username = ? 
-                ORDER BY id
+            SELECT total_score, timestamp, id, sentiment_score 
+            FROM scores 
+            WHERE username = ? 
+            ORDER BY id
             """, (self.username,))
-        else:
-            cursor.execute("""
-                SELECT total_score, id 
-                FROM scores 
-                WHERE username = ? 
-                ORDER BY id
-            """, (self.username,))
-        
-        data = cursor.fetchall()
-        conn.close()
+            data = cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching EQ trends: {e}")
+            data = []
+        finally:
+            conn.close()
         
         if not data:
             tk.Label(parent, text="No EQ data available", font=("Arial", 14)).pack(pady=50)
             return
         
         scores = [row[0] for row in data]
+        sentiment_scores = [row[3] if len(row) > 3 else None for row in data]
         timestamps = []
         
         # Parse timestamps if available
@@ -363,34 +356,44 @@ class AnalyticsDashboard:
         
         # Create matplotlib figure
         fig = Figure(figsize=(6, 4), dpi=80)
-        ax = fig.add_subplot(111)
+        ax1 = fig.add_subplot(111)
         
-        # Plot line graph
-        ax.plot(range(1, len(scores) + 1), scores, 
+        # Plot EQ Score
+        l1, = ax1.plot(range(1, len(scores) + 1), scores, 
                marker='o', linestyle='-', linewidth=2, markersize=8,
                color='#4CAF50', markerfacecolor='#2196F3', 
-               markeredgewidth=2, markeredgecolor='#1976D2')
+               markeredgewidth=2, markeredgecolor='#1976D2', label="EQ Score")
         
-        # Fill area under line
-        ax.fill_between(range(1, len(scores) + 1), scores, alpha=0.3, color='#4CAF50')
+        ax1.set_xlabel('Attempt Number', fontsize=11, fontweight='bold')
+        ax1.set_ylabel('EQ Score', fontsize=11, fontweight='bold', color='#4CAF50')
+        ax1.tick_params(axis='y', labelcolor='#4CAF50')
+        ax1.set_title('EQ Score & Emotional Sentiment Trends', fontsize=12, fontweight='bold', pad=15)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        ax1.set_xticks(range(1, len(scores) + 1))
         
-        # Formatting
-        ax.set_xlabel('Attempt Number', fontsize=11, fontweight='bold')
-        ax.set_ylabel('EQ Score', fontsize=11, fontweight='bold')
-        ax.set_title('Your EQ Progress Journey', fontsize=12, fontweight='bold', pad=15)
-        ax.grid(True, alpha=0.3, linestyle='--')
-        ax.set_xticks(range(1, len(scores) + 1))
-        
-        # Add value labels on points
-        for i, score in enumerate(scores):
-            ax.annotate(str(score), 
-                       xy=(i + 1, score), 
-                       xytext=(0, 10),
-                       textcoords='offset points',
-                       ha='center',
-                       fontsize=9,
-                       fontweight='bold',
-                       bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+        # Plot Sentiment Score (Secondary Axis)
+        if sentiment_scores and any(s is not None and s != 0 for s in sentiment_scores):
+            ax2 = ax1.twinx()
+            # Filter out Nones for plotting
+            valid_indices = [i for i, s in enumerate(sentiment_scores) if s is not None]
+            valid_x = [i + 1 for i in valid_indices]
+            valid_y = [sentiment_scores[i] for i in valid_indices]
+            
+            l2, = ax2.plot(valid_x, valid_y, 
+                     marker='s', linestyle='--', linewidth=2, markersize=6,
+                     color='#FF9800', markerfacecolor='#FFC107',
+                     markeredgewidth=2, markeredgecolor='#E64A19', label="Sentiment")
+                     
+            ax2.set_ylabel('Sentiment Score (-100 to +100)', fontsize=11, fontweight='bold', color='#FF9800')
+            ax2.tick_params(axis='y', labelcolor='#FF9800')
+            ax2.set_ylim(-110, 110)
+            
+            # Combined Legend
+            lines = [l1, l2]
+            labels = [l.get_label() for l in lines]
+            ax1.legend(lines, labels, loc='upper left')
+        else:
+            ax1.legend(loc='upper left')
         
         fig.tight_layout()
         
@@ -452,23 +455,38 @@ class AnalyticsDashboard:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
+        # Helper to create styled section
+        def create_styled_text(parent_frame, bg_color):
+            t = tk.Text(parent_frame, height=7, width=50, font=("Arial", 10), 
+                       bg=bg_color, fg="black", relief=tk.FLAT)
+            t.tag_config("label", foreground="#555555", font=("Arial", 10, "bold"))
+            t.tag_config("value", foreground="#000000", font=("Arial", 10))
+            t.tag_config("highlight", foreground="#2E7D32", font=("Arial", 10, "bold")) # Green
+            t.tag_config("alert", foreground="#C62828", font=("Arial", 10, "bold")) # Red
+            t.tag_config("info", foreground="#1565C0", font=("Arial", 10, "bold")) # Blue
+            return t
+
+        def insert_pair(text_widget, label, value, value_tag="value"):
+            text_widget.insert(tk.END, f"{label}: ", "label")
+            text_widget.insert(tk.END, f"{value}\n", value_tag)
+        
         # Stats Frame 1 - Basic Statistics
         stats1_frame = tk.Frame(scrollable_frame, bg="#f0f0f0", relief=tk.RIDGE, bd=2)
         stats1_frame.pack(fill=tk.X, padx=10, pady=5)
         
         tk.Label(stats1_frame, text="📊 Score Statistics", 
-                font=("Arial", 11, "bold"), bg="#f0f0f0").pack(anchor="w", padx=10, pady=5)
+                font=("Arial", 11, "bold"), bg="#f0f0f0", fg="black").pack(anchor="w", padx=10, pady=5)
         
-        stats_text1 = tk.Text(stats1_frame, height=7, width=50, font=("Arial", 10), bg="#f0f0f0")
+        stats_text1 = create_styled_text(stats1_frame, "#f0f0f0")
         stats_text1.pack(padx=10, pady=5)
         
-        stats_text1.insert(tk.END, f"Total Attempts: {trend_data.get('total_attempts', 0)}\n")
-        stats_text1.insert(tk.END, f"First Score: {trend_data.get('first_score', 'N/A')}\n")
-        stats_text1.insert(tk.END, f"Latest Score: {trend_data.get('last_score', 'N/A')}\n")
-        stats_text1.insert(tk.END, f"Average Score: {trend_data.get('average_score', 0):.1f}\n")
-        stats_text1.insert(tk.END, f"Highest Score: {trend_data.get('max_score', 'N/A')}\n")
-        stats_text1.insert(tk.END, f"Lowest Score: {trend_data.get('min_score', 'N/A')}\n")
-        stats_text1.insert(tk.END, f"Score Standard Deviation: {trend_data.get('score_std_dev', 0):.2f}\n")
+        insert_pair(stats_text1, "Total Attempts", trend_data.get('total_attempts', 0))
+        insert_pair(stats_text1, "First Score", trend_data.get('first_score', 'N/A'))
+        insert_pair(stats_text1, "Latest Score", trend_data.get('last_score', 'N/A'), "highlight")
+        insert_pair(stats_text1, "Average Score", f"{trend_data.get('average_score', 0):.1f}")
+        insert_pair(stats_text1, "Highest Score", trend_data.get('max_score', 'N/A'))
+        insert_pair(stats_text1, "Lowest Score", trend_data.get('min_score', 'N/A'))
+        insert_pair(stats_text1, "Score Std Dev", f"{trend_data.get('score_std_dev', 0):.2f}")
         stats_text1.config(state=tk.DISABLED)
         
         # Stats Frame 2 - Trend Information
@@ -476,16 +494,20 @@ class AnalyticsDashboard:
         stats2_frame.pack(fill=tk.X, padx=10, pady=5)
         
         tk.Label(stats2_frame, text="📈 Trend Analysis", 
-                font=("Arial", 11, "bold"), bg="#e3f2fd").pack(anchor="w", padx=10, pady=5)
+                font=("Arial", 11, "bold"), bg="#e3f2fd", fg="black").pack(anchor="w", padx=10, pady=5)
         
-        stats_text2 = tk.Text(stats2_frame, height=5, width=50, font=("Arial", 10), bg="#e3f2fd")
+        stats_text2 = create_styled_text(stats2_frame, "#e3f2fd")
+        stats_text2.config(height=5)
         stats_text2.pack(padx=10, pady=5)
         
-        stats_text2.insert(tk.END, f"Total Improvement: {trend_data.get('total_improvement', 0):+d} points\n")
-        stats_text2.insert(tk.END, f"Improvement %: {trend_data.get('improvement_percentage', 0):+.1f}%\n")
-        stats_text2.insert(tk.END, f"Trend Direction: {trend_data.get('trend_direction', 'Unknown')}\n")
-        stats_text2.insert(tk.END, f"First Attempt: {trend_data.get('first_attempt_date', 'N/A')}\n")
-        stats_text2.insert(tk.END, f"Latest Attempt: {trend_data.get('last_attempt_date', 'N/A')}\n")
+        imp = trend_data.get('total_improvement', 0)
+        imp_tag = "highlight" if imp > 0 else "alert" if imp < 0 else "value"
+        
+        insert_pair(stats_text2, "Total Improvement", f"{imp:+d} points", imp_tag)
+        insert_pair(stats_text2, "Improvement %", f"{trend_data.get('improvement_percentage', 0):+.1f}%", imp_tag)
+        insert_pair(stats_text2, "Trend Direction", trend_data.get('trend_direction', 'Unknown'), "info")
+        insert_pair(stats_text2, "First Attempt", trend_data.get('first_attempt_date', 'N/A'))
+        insert_pair(stats_text2, "Latest Attempt", trend_data.get('last_attempt_date', 'N/A'))
         stats_text2.config(state=tk.DISABLED)
         
         # Response Pattern Analysis
@@ -496,16 +518,16 @@ class AnalyticsDashboard:
             stats3_frame.pack(fill=tk.X, padx=10, pady=5)
             
             tk.Label(stats3_frame, text="🔄 Response Pattern Changes", 
-                    font=("Arial", 11, "bold"), bg="#f5f5f5").pack(anchor="w", padx=10, pady=5)
+                    font=("Arial", 11, "bold"), bg="#f5f5f5", fg="black").pack(anchor="w", padx=10, pady=5)
             
-            pattern_summary = f"Total Responses: {response_patterns.get('total_responses', 0)}\n"
-            pattern_summary += f"Unique Questions Answered: {response_patterns.get('unique_questions_answered', 0)}\n"
-            pattern_summary += f"Overall Response Average: {response_patterns.get('overall_average_response', 0):.2f}\n"
-            pattern_summary += f"Response Consistency (Std Dev): {response_patterns.get('overall_response_std_dev', 0):.2f}\n"
-            
-            stats_text3 = tk.Text(stats3_frame, height=4, width=50, font=("Arial", 10), bg="#f5f5f5")
+            stats_text3 = create_styled_text(stats3_frame, "#f5f5f5")
+            stats_text3.config(height=4)
             stats_text3.pack(padx=10, pady=5)
-            stats_text3.insert(tk.END, pattern_summary)
+            
+            insert_pair(stats_text3, "Total Responses", response_patterns.get('total_responses', 0))
+            insert_pair(stats_text3, "Unique Questions", response_patterns.get('unique_questions_answered', 0))
+            insert_pair(stats_text3, "Overall Avg Response", f"{response_patterns.get('overall_average_response', 0):.2f}")
+            insert_pair(stats_text3, "Consistency (Std Dev)", f"{response_patterns.get('overall_response_std_dev', 0):.2f}")
             stats_text3.config(state=tk.DISABLED)
         
         # Comparative Analysis (Last 30 days vs historical)
@@ -516,32 +538,37 @@ class AnalyticsDashboard:
             stats4_frame.pack(fill=tk.X, padx=10, pady=5)
             
             tk.Label(stats4_frame, text="📅 Recent vs Historical (Last 30 Days)", 
-                    font=("Arial", 11, "bold"), bg="#fff3e0").pack(anchor="w", padx=10, pady=5)
+                    font=("Arial", 11, "bold"), bg="#fff3e0", fg="black").pack(anchor="w", padx=10, pady=5)
             
-            comp_text = tk.Text(stats4_frame, height=6, width=50, font=("Arial", 10), bg="#fff3e0")
+            comp_text = create_styled_text(stats4_frame, "#fff3e0")
+            comp_text.config(height=6)
             comp_text.pack(padx=10, pady=5)
             
             if "historical" in comparative:
                 hist = comparative["historical"]
-                comp_text.insert(tk.END, f"Historical Avg Score: {hist.get('average_score', 0):.1f}\n")
-                comp_text.insert(tk.END, f"Historical Attempts: {hist.get('attempts', 0)}\n\n")
+                insert_pair(comp_text, "Historical Avg", f"{hist.get('average_score', 0):.1f}")
+                insert_pair(comp_text, "Historical Attempts", hist.get('attempts', 0))
+                comp_text.insert(tk.END, "\n")
             
             if "recent" in comparative:
                 recent = comparative["recent"]
-                comp_text.insert(tk.END, f"Recent Avg Score (30d): {recent.get('average_score', 0):.1f}\n")
-                comp_text.insert(tk.END, f"Recent Attempts: {recent.get('attempts', 0)}\n")
+                insert_pair(comp_text, "Recent Avg (30d)", f"{recent.get('average_score', 0):.1f}")
+                insert_pair(comp_text, "Recent Attempts", recent.get('attempts', 0))
             
             if "performance_change" in comparative:
                 change = comparative["performance_change"]
                 change_pct = comparative.get("performance_change_percentage", 0)
-                color_indicator = "📈" if change > 0 else "📉" if change < 0 else "⚖️"
-                comp_text.insert(tk.END, f"\n{color_indicator} Performance Change: {change:+.1f} ({change_pct:+.1f}%)")
+                change_tag = "highlight" if change > 0 else "alert" if change < 0 else "value"
+                symbol = "📈" if change > 0 else "📉" if change < 0 else "⚖️"
+                
+                comp_text.insert(tk.END, f"\n{symbol} Change: ", "label")
+                comp_text.insert(tk.END, f"{change:+.1f} ({change_pct:+.1f}%)", change_tag)
             
             comp_text.config(state=tk.DISABLED)
 
     def show_journal_analytics(self, parent):
         """Show journal analytics"""
-        conn = sqlite3.connect("soulsense_db")
+        conn = get_connection() # Use centralized connection logic
         cursor = conn.cursor()
         
         # Check if journal_entries table exists
@@ -622,34 +649,23 @@ class AnalyticsDashboard:
         """Generate insights"""
         insights = []
         
-        # Get EQ scores
-        conn = sqlite3.connect("soulsense_db")
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT total_score 
-            FROM scores 
-            WHERE username = ? 
-            ORDER BY id
-        """, (self.username,))
-        eq_rows = cursor.fetchall()
-        
-        # Get journal data if table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='journal_entries'")
-        journal_exists = cursor.fetchone()
-        
-        if journal_exists:
-            cursor.execute("""
-                SELECT sentiment_score 
-                FROM journal_entries 
-                WHERE username = ?
-            """, (self.username,))
-            j_rows = cursor.fetchall()
-        else:
-            j_rows = []
-        
-        conn.close()
-        
-        scores = [r[0] for r in eq_rows]
+        session = get_session()
+        try:
+            # EQ and Sentiment insights from SCORES table
+            eq_rows = session.query(Score.total_score, Score.sentiment_score)\
+                .filter_by(username=self.username)\
+                .order_by(Score.id)\
+                .all()
+            scores = [r[0] for r in eq_rows]
+            test_sentiments = [r[1] for r in eq_rows if r[1] is not None]
+            
+            # Journal insights purely from Journal entries
+            j_rows = session.query(JournalEntry.sentiment_score)\
+                .filter_by(username=self.username)\
+                .all()
+            journal_sentiments = [r[0] for r in j_rows]
+        finally:
+            session.close()
         
         if len(scores) > 1:
             improvement = ((scores[-1] - scores[0]) / scores[0]) * 100 if scores[0] != 0 else 0
@@ -660,16 +676,24 @@ class AnalyticsDashboard:
             else:
                 insights.append("💪 Focus on emotional awareness to boost EQ scores")
         
-        if j_rows:
-            sentiments = [r[0] for r in j_rows if r[0] is not None]
-            if sentiments:
-                avg_sentiment = sum(sentiments) / len(sentiments)
-                if avg_sentiment > 20:
-                    insights.append("😊 Your journal shows positive emotional tone - keep it up!")
-                elif avg_sentiment < -20:
-                    insights.append("🤗 Consider stress management techniques for better emotional balance")
-                else:
-                    insights.append("⚖️ You maintain balanced emotional tone in your reflections")
+        if journal_sentiments:
+            avg_sentiment = sum(journal_sentiments) / len(journal_sentiments)
+            if avg_sentiment > 20:
+                insights.append("😊 Your journal shows positive emotional tone - keep it up!")
+            elif avg_sentiment < -20:
+                insights.append("🤗 Consider stress management techniques for better emotional balance")
+            else:
+                insights.append("⚖️ You maintain balanced emotional tone in your reflections")
+                
+        # Correlation Insight
+        if scores and test_sentiments:
+            latest_score = scores[-1]
+            latest_sentiment = test_sentiments[-1]
+            
+            if latest_score > 35 and latest_sentiment < -20:
+                insights.append("🎭 You have high EQ skills but are feeling down. Use your skills to navigate this emotions.")
+            elif latest_score < 25 and latest_sentiment > 20:
+                insights.append("🌱 Your spirit is high despite lower EQ scores! Use this optimism to learn emotional skills.")
         
         if not insights:
             insights.append("📝 Complete more assessments and journal entries for insights!")

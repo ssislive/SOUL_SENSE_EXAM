@@ -4,20 +4,38 @@ from tkinter import ttk, messagebox, scrolledtext
 from datetime import datetime
 import sqlite3
 from sqlalchemy import desc
+import logging
 
 # Change this import line:
 # from app.models import JournalEntry
 # to:
 try:
     from app.models import JournalEntry
+    from app.db import get_session
 except ImportError:
-    # Fallback to direct SQLite
+    # Fallback/Error handling
     JournalEntry = None
+    get_session = None
+
+from analytics_dashboard import AnalyticsDashboard
+
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
 
 class JournalFeature:
     def __init__(self, parent_root):
         self.parent_root = parent_root
-        # Database setup is handled efficiently by app.db.check_db_state or migration
+        
+        # Initialize VADER
+        try:
+            nltk.data.find('sentiment/vader_lexicon.zip')
+        except LookupError:
+            nltk.download('vader_lexicon', quiet=True)
+            
+        try:
+            self.sia = SentimentIntensityAnalyzer()
+        except:
+            self.sia = None
         
     def open_journal_window(self, username):
         """Open the journal window"""
@@ -65,22 +83,32 @@ class JournalFeature:
                  font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
     
     def analyze_sentiment(self, text):
-        """Simple sentiment analysis based on emotional keywords"""
-        positive_words = ['happy', 'joy', 'excited', 'grateful', 'peaceful', 'confident', 
-                         'proud', 'hopeful', 'content', 'satisfied', 'calm', 'relaxed']
-        negative_words = ['sad', 'angry', 'frustrated', 'anxious', 'worried', 'stressed', 
-                         'disappointed', 'upset', 'overwhelmed', 'depressed', 'fear', 'lonely']
-        
-        text_lower = text.lower()
-        positive_count = sum(1 for word in positive_words if word in text_lower)
-        negative_count = sum(1 for word in negative_words if word in text_lower)
-        
-        total_words = len(text.split())
-        if total_words == 0:
+        """Analyze sentiment using NLTK VADER"""
+        if not text.strip():
             return 0.0
             
-        sentiment_score = (positive_count - negative_count) / max(total_words, 1) * 100
-        return max(-100, min(100, sentiment_score))
+        if self.sia:
+            try:
+                scores = self.sia.polarity_scores(text)
+                # Convert compound (-1 to 1) to -100 to 100
+                return scores['compound'] * 100
+            except Exception as e:
+                logging.error(f"Sentiment analysis error: {e}")
+                return 0.0
+        else:
+            # Fallback to simple keyword matching if VADER fails
+            positive_words = ['happy', 'joy', 'excited', 'grateful', 'peaceful', 'confident']
+            negative_words = ['sad', 'angry', 'frustrated', 'anxious', 'worried', 'stressed']
+            
+            text_lower = text.lower()
+            positive_count = sum(1 for word in positive_words if word in text_lower)
+            negative_count = sum(1 for word in negative_words if word in text_lower)
+            
+            total_words = len(text.split())
+            if total_words == 0: return 0.0
+            
+            score = (positive_count - negative_count) / max(total_words, 1) * 100
+            return max(-100, min(100, score))
     
     def extract_emotional_patterns(self, text):
         """Extract emotional patterns from text"""

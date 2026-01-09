@@ -35,7 +35,8 @@ class SoulSenseMLPredictor:
             'social_awareness',           # Q5
             'total_score',
             'age',
-            'average_score'
+            'average_score',
+            'sentiment_score'             # New Feature
         ]
         self.class_names = ['Low Risk', 'Moderate Risk', 'High Risk']
         self.use_versioning = use_versioning
@@ -49,14 +50,32 @@ class SoulSenseMLPredictor:
         # Try to load existing model, otherwise train new one
         try:
             self.load_model()
-            print("✅ Loaded existing ML model")
+            # Check if loaded model has sentiment support
+            if 'sentiment_score' not in self.feature_names:
+                print("🔄 Model outdated (no sentiment). Retraining...")
+                # RESET feature names to include sentiment_score
+                self.feature_names = [
+                    'emotional_recognition',
+                    'emotional_understanding',
+                    'emotional_regulation',
+                    'emotional_reflection',
+                    'social_awareness',
+                    'total_score',
+                    'age',
+                    'average_score',
+                    'sentiment_score'
+                ]
+                self.train_sample_model()
+                self.save_model()
+            else:
+                print("✅ Loaded existing ML model")
         except Exception as e:
             logger.info(f"No existing model found: {e}")
             print("🔄 Training new ML model...")
             self.train_sample_model()
             self.save_model()
     
-    def prepare_features(self, q_scores, age, total_score):
+    def prepare_features(self, q_scores, age, total_score, sentiment_score=0.0):
         """Prepare features for ML prediction"""
         q_scores = np.array(q_scores)
         
@@ -68,7 +87,8 @@ class SoulSenseMLPredictor:
             'social_awareness': q_scores[4] if len(q_scores) > 4 else 3,
             'total_score': total_score,
             'age': age,
-            'average_score': total_score / max(len(q_scores), 1)
+            'average_score': total_score / max(len(q_scores), 1),
+            'sentiment_score': sentiment_score
         }
         
         # Convert to numpy array in correct order
@@ -115,10 +135,16 @@ class SoulSenseMLPredictor:
                 age = np.random.randint(12, 50)
                 avg_score = total_score / 5
                 
+                # Generate synthetic sentiment correlated with score
+                # Lower score -> more likely to have negative sentiment, but with noise
+                base_sentiment = (total_score / 25.0) * 100 # 0 to 100
+                sentiment_noise = np.random.normal(0, 30)
+                sentiment_score = max(-100, min(100, (base_sentiment - 50) * 2 + sentiment_noise))
+                
                 # Create feature vector
                 X[i] = [
                     q_scores[0], q_scores[1], q_scores[2], q_scores[3], q_scores[4],
-                    total_score, age, avg_score
+                    total_score, age, avg_score, sentiment_score
                 ]
             
             # Generate labels based on rules
@@ -126,11 +152,14 @@ class SoulSenseMLPredictor:
             for i in range(n_samples):
                 total_score = X[i, 5]
                 avg_score = X[i, 7]
+                sentiment_score = X[i, 8]
                 
-                # Risk classification rules
-                if total_score <= 10 or avg_score <= 2:
+                # Risk classification rules (Enhanced with Sentiment)
+                # High Risk: Low EQ OR (Moderate EQ + Very Negative Sentiment)
+                if total_score <= 10 or (total_score <= 15 and sentiment_score < -50):
                     y.append(2)  # High risk
-                elif total_score <= 15 or avg_score <= 3:
+                # Moderate Risk: Moderate EQ OR (High EQ + Negative Sentiment)
+                elif total_score <= 15 or (total_score <= 20 and sentiment_score < -20):
                     y.append(1)  # Moderate risk
                 else:
                     y.append(0)  # Low risk
@@ -156,11 +185,11 @@ class SoulSenseMLPredictor:
             
             self.model.fit(X_train_scaled, y_train)
             
-            # Calculate accuracy and metrics
+            # Calculate accuracy
             train_acc = self.model.score(X_train_scaled, y_train)
             test_acc = self.model.score(X_test_scaled, y_test)
             
-            # Calculate additional metrics
+            # Calculate additional metrics (Merged from Origin)
             y_pred = self.model.predict(X_test_scaled)
             f1 = f1_score(y_test, y_pred, average='weighted')
             precision = precision_score(y_test, y_pred, average='weighted')
@@ -175,7 +204,7 @@ class SoulSenseMLPredictor:
             report = classification_report(y_test, y_pred, target_names=self.class_names)
             print(report)
             
-            # Log metrics to versioning system
+            # Log metrics to versioning system (Merged from Origin)
             if self.use_versioning and self.versioning_manager:
                 self.versioning_manager.log_metrics({
                     "train_accuracy": float(train_acc),
@@ -197,7 +226,7 @@ class SoulSenseMLPredictor:
             if self.use_versioning and self.versioning_manager:
                 self.versioning_manager.fail_run(str(e))
             raise
-
+    
     def save_evaluation_artifacts(self, y_true, y_pred, report):
         """Save confusion matrix plot and metrics text"""
         # 1. Save Metrics Text
@@ -221,13 +250,13 @@ class SoulSenseMLPredictor:
         plt.close()
         print("📉 Confusion matrix saved to confusion_matrix.png")
     
-    def predict_with_explanation(self, q_scores, age, total_score):
+    def predict_with_explanation(self, q_scores, age, total_score, sentiment_score=0.0):
         """Make prediction with XAI explanations"""
         # Clean inputs first
         q_scores, age, total_score = DataCleaner.clean_inputs(q_scores, age, total_score)
         
         # Prepare features
-        X_scaled, feature_dict = self.prepare_features(q_scores, age, total_score)
+        X_scaled, feature_dict = self.prepare_features(q_scores, age, total_score, sentiment_score)
         
         # Scale features
         X_scaled = self.scaler.transform(X_scaled)
@@ -262,6 +291,15 @@ class SoulSenseMLPredictor:
         """Generate actionable advice based on specific feature deficits"""
         advice = []
         
+        sentiment = features.get('sentiment_score', 0.0)
+        
+        # Sentiment-Specific Advice
+        if sentiment < -40:
+            advice.append("Prioritize Self-Care: Your sentiment analysis suggests significant stress or distress.")
+            advice.append("Journaling 2.0: Try 'Cognitive Reframing' to challenge negative thoughts.")
+        elif sentiment < -10:
+            advice.append("Your sentiment is slightly negative. Try listing 3 things you're grateful for.")
+        
         # General Advice based on Risk Level
         if prediction == 2: # High Risk
             advice.append("Consider consulting a mental health professional for personalized support.")
@@ -294,7 +332,7 @@ class SoulSenseMLPredictor:
             advice.append("Continue engaging in hobbies that bring you joy.")
             advice.append("Maintain your current healthy emotional habits!")
             
-        return advice[:5] # Limit to top 5 tips
+        return advice[:6] # Limit to top 6 tips
     
     def get_feature_importance(self, features):
         """Get feature importance for this specific prediction"""
@@ -379,6 +417,13 @@ class SoulSenseMLPredictor:
                     explanation = f"Moderate overall score ({feature_value}/25)"
                 else:
                     explanation = f"High overall score ({feature_value}/25)"
+            elif feature_name == 'sentiment_score':
+                if feature_value < -20:
+                    explanation = f"Negative emotional tone ({feature_value:.1f})"
+                elif feature_value > 20:
+                    explanation = f"Positive emotional tone (+{feature_value:.1f})"
+                else:
+                    explanation = f"Neutral emotional tone ({feature_value:.1f})"
             
             feature_explanations.append({
                 'feature': feature_readable,

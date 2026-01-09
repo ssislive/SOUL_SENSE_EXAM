@@ -19,3 +19,11 @@ class ResourceError(SoulSenseError):
 class ValidationError(SoulSenseError):
     """Raised when user input is invalid."""
     pass
+
+class AuthenticationError(SoulSenseError):
+    """Raised when authentication fails."""
+    pass
+
+class APIConnectionError(SoulSenseError):
+    """Raised when external API connection fails."""
+    pass

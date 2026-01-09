@@ -82,3 +82,5 @@ THEME = _config["ui"]["theme"]
 # Feature Toggles
 ENABLE_JOURNAL = _config["features"]["enable_journal"]
 ENABLE_ANALYTICS = _config["features"]["enable_analytics"]
+
+APP_CONFIG = _config

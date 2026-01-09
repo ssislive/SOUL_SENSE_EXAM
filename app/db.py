@@ -82,14 +82,18 @@ def create_tables_directly():
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
-        # Create scores table
+        # Create scores table (Updated with sentiment columns)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS scores (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 age INTEGER,
                 total_score INTEGER,
-                timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+                sentiment_score REAL DEFAULT 0.0,
+                reflection_text TEXT,
+                timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+                detailed_age_group TEXT,
+                user_id INTEGER
             )
         """)
         

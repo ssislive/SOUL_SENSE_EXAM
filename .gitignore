@@ -113,6 +113,13 @@ db/*.db
 db/*.sqlite 
 soulsesne_db
 
+# =========================
+# ML Artifacts
+# =========================
+*.pkl
+*.png
+model_metrics.txt
+
 ###  registry data and experiment logs
 
 models/registry/
