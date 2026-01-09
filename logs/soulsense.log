@@ -60,3 +60,38 @@
 2026-01-07 21:33:41,767 - INFO - Application started
 2026-01-07 21:34:47,542 - INFO - User logged in: madhuri
 2026-01-07 21:35:01,484 - INFO - Session started | user=madhur | age=19 | education=Undergraduate | age_group=adult
+2026-01-08 13:17:25,130 - root - INFO - Logging initialized.
+2026-01-08 13:17:25,131 - root - INFO - Application started
+2026-01-08 13:17:25,137 - app.questions - ERROR - Failed to load questions: Failed to fetch questions from DB.
+2026-01-08 13:17:25,137 - root - ERROR - Fatal Error: Question bank could not be loaded.
+The application cannot start. | Error: Failed to fetch questions from DB.
+Traceback (most recent call last):
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\venv\lib\site-packages\sqlalchemy\engine\result.py", line 199, in _key_not_found
+    self._key_fallback(key, None)
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\venv\lib\site-packages\sqlalchemy\engine\result.py", line 138, in _key_fallback
+    raise KeyError(key) from err
+KeyError: 'min_age'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\app\questions.py", line 134, in _get_cached_questions_from_db
+    rows = [(q.id, q.question_text, q.tooltip, q.min_age, q.max_age) for q in questions]
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\app\questions.py", line 134, in <listcomp>
+    rows = [(q.id, q.question_text, q.tooltip, q.min_age, q.max_age) for q in questions]
+  File "lib/sqlalchemy/cyextension/resultproxy.pyx", line 66, in sqlalchemy.cyextension.resultproxy.BaseRow.__getattr__
+  File "lib/sqlalchemy/cyextension/resultproxy.pyx", line 63, in sqlalchemy.cyextension.resultproxy.BaseRow._get_by_key_impl
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\venv\lib\site-packages\sqlalchemy\engine\result.py", line 201, in _key_not_found
+    raise AttributeError(ke.args[0]) from ke
+AttributeError: min_age
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\app\main.py", line 154, in <module>
+    rows = load_questions()  # [(id, text)]
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\app\questions.py", line 270, in load_questions
+    questions = _get_cached_questions_from_db(age)
+  File "C:\Users\neeru\OneDrive\Desktop\soulsense\SOUL_SENSE_EXAM\app\questions.py", line 145, in _get_cached_questions_from_db
+    raise DatabaseError("Failed to fetch questions from DB.", original_exception=e)
+app.exceptions.DatabaseError: Failed to fetch questions from DB.

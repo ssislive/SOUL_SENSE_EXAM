@@ -1,12 +1,18 @@
+# journal_feature.py - Fix the imports at the top
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import ttk, messagebox, scrolledtext
 from datetime import datetime
-import re
+import sqlite3
 from sqlalchemy import desc
-from analytics_dashboard import AnalyticsDashboard
-from app.db import get_session
-from app.models import JournalEntry
-import logging
+
+# Change this import line:
+# from app.models import JournalEntry
+# to:
+try:
+    from app.models import JournalEntry
+except ImportError:
+    # Fallback to direct SQLite
+    JournalEntry = None
 
 class JournalFeature:
     def __init__(self, parent_root):

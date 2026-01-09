@@ -1,3 +1,4 @@
+# analytics_dashboard.py - COMPLETE FIXED VERSION
 import tkinter as tk
 from tkinter import ttk
 from datetime import datetime
@@ -9,8 +10,9 @@ import matplotlib.dates as mdates
 import json
 import os
 import sqlite3
-from app.models import get_session, Score, JournalEntry
-from app.time_based_analysis import time_analyzer
+
+# REMOVE THIS LINE - it's causing the error
+# from app.models import get_session, Score, JournalEntry
 
 class AnalyticsDashboard:
     def __init__(self, parent_root, username):
@@ -30,7 +32,7 @@ class AnalyticsDashboard:
         """Open analytics dashboard"""
         dashboard = tk.Toplevel(self.parent_root)
         dashboard.title("📊 Emotional Health Dashboard")
-        dashboard.geometry("600x500")
+        dashboard.geometry("900x700")  # Increased size for new tab
         
         tk.Label(dashboard, text="📊 Emotional Health Analytics", 
                 font=("Arial", 16, "bold")).pack(pady=10)
@@ -38,9 +40,14 @@ class AnalyticsDashboard:
         notebook = ttk.Notebook(dashboard)
         notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
+        # Correlation Analysis Tab (NEW)
+        correlation_frame = ttk.Frame(notebook)
+        notebook.add(correlation_frame, text="🔗 Correlation")
+        self.show_correlation_analysis(correlation_frame)  # NEW METHOD
+            
         # EQ Trends
         eq_frame = ttk.Frame(notebook)
-        notebook.add(eq_frame, text="EQ Trends")
+        notebook.add(eq_frame, text="📈 EQ Trends")
         self.show_eq_trends(eq_frame)
         
         # Time-Based Analysis
@@ -50,24 +57,256 @@ class AnalyticsDashboard:
         
         # Journal Analytics
         journal_frame = ttk.Frame(notebook)
-        notebook.add(journal_frame, text="Journal Analytics")
+        notebook.add(journal_frame, text="📝 Journal Analytics")
         self.show_journal_analytics(journal_frame)
         
         # Insights
         insights_frame = ttk.Frame(notebook)
-        notebook.add(insights_frame, text="Insights")
+        notebook.add(insights_frame, text="🔍 Insights")
         self.show_insights(insights_frame)
         
+    # ========== NEW CORRELATION ANALYSIS METHOD ==========
+    def show_correlation_analysis(self, parent):
+        """Show correlation analysis between EQ scores"""
+        # Title
+        tk.Label(parent, text="🔗 Correlation Analysis", 
+                font=("Arial", 16, "bold")).pack(pady=10)
+        
+        # Description
+        tk.Label(parent, 
+                text="Analyze patterns and relationships in your EQ scores",
+                font=("Arial", 11), wraplength=550).pack(pady=5)
+        
+        # Button to run analysis
+        button_frame = tk.Frame(parent)
+        button_frame.pack(pady=10)
+        
+        tk.Button(button_frame, text="Run Correlation Analysis", 
+                 command=lambda: self.run_correlation(parent),
+                 bg="#4CAF50", fg="white",
+                 font=("Arial", 11, "bold")).pack()
+        
+        # Text area for results
+        self.correlation_text = tk.Text(parent, wrap=tk.WORD, height=15, 
+                                       font=("Arial", 11))
+        self.correlation_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Visualization frame
+        self.correlation_viz_frame = tk.Frame(parent)
+        self.correlation_viz_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+    def run_correlation(self, parent):
+        """Run correlation analysis"""
+        try:
+            # Clear previous content
+            self.correlation_text.delete(1.0, tk.END)
+            
+            # Clear previous visualization
+            for widget in self.correlation_viz_frame.winfo_children():
+                widget.destroy()
+            
+            # Get EQ scores
+            conn = sqlite3.connect("soulsense_db")
+            cursor = conn.cursor()
+            
+            # First, check what columns exist in the scores table
+            cursor.execute("PRAGMA table_info(scores)")
+            columns = [col[1] for col in cursor.fetchall()]
+            
+            # Build query based on available columns
+            if 'timestamp' in columns:
+                cursor.execute("""
+                    SELECT total_score, timestamp 
+                    FROM scores 
+                    WHERE username = ? 
+                    ORDER BY timestamp
+                """, (self.username,))
+            else:
+                cursor.execute("""
+                    SELECT total_score, id 
+                    FROM scores 
+                    WHERE username = ? 
+                    ORDER BY id
+                """, (self.username,))
+            
+            data = cursor.fetchall()
+            conn.close()
+            
+            if len(data) < 2:
+                self.correlation_text.insert(tk.END, 
+                    "⚠️ Need at least 2 EQ tests for correlation analysis.\n\n"
+                    "Complete more tests and try again!")
+                return
+            
+            scores = [row[0] for row in data]
+            
+            # Start analysis
+            self.correlation_text.insert(tk.END, "📊 **CORRELATION ANALYSIS RESULTS**\n")
+            self.correlation_text.insert(tk.END, "="*60 + "\n\n")
+            
+            # Import numpy for calculations
+            try:
+                import numpy as np
+                
+                # Basic statistics
+                self.correlation_text.insert(tk.END, "📈 **Basic Statistics:**\n")
+                self.correlation_text.insert(tk.END, f"• Number of tests: {len(scores)}\n")
+                self.correlation_text.insert(tk.END, f"• Average score: {np.mean(scores):.2f}/25\n")
+                self.correlation_text.insert(tk.END, f"• Best score: {max(scores)}\n")
+                self.correlation_text.insert(tk.END, f"• Worst score: {min(scores)}\n")
+                self.correlation_text.insert(tk.END, f"• Score range: {max(scores) - min(scores)} points\n\n")
+                
+                # Trend analysis
+                if len(scores) >= 3:
+                    x = np.arange(len(scores))
+                    z = np.polyfit(x, scores, 1)
+                    trend = z[0]
+                    
+                    self.correlation_text.insert(tk.END, "📈 **Trend Analysis:**\n")
+                    self.correlation_text.insert(tk.END, f"• Trend slope: {trend:.3f} points per test\n")
+                    
+                    if trend > 0.5:
+                        self.correlation_text.insert(tk.END, "✅ **Strong positive trend!** Consistent improvement!\n")
+                    elif trend > 0.1:
+                        self.correlation_text.insert(tk.END, "↗️ **Positive trend** - Gradual improvement\n")
+                    elif trend < -0.5:
+                        self.correlation_text.insert(tk.END, "📉 **Strong negative trend** - Review strategies\n")
+                    elif trend < -0.1:
+                        self.correlation_text.insert(tk.END, "↘️ **Negative trend** - Needs attention\n")
+                    else:
+                        self.correlation_text.insert(tk.END, "⚖️ **Stable performance**\n")
+                    self.correlation_text.insert(tk.END, "\n")
+                
+                # Consistency analysis
+                std_dev = np.std(scores)
+                cv = (std_dev / np.mean(scores) * 100) if np.mean(scores) > 0 else 0
+                
+                self.correlation_text.insert(tk.END, "🎯 **Consistency Analysis:**\n")
+                self.correlation_text.insert(tk.END, f"• Standard deviation: {std_dev:.2f}\n")
+                self.correlation_text.insert(tk.END, f"• Coefficient of variation: {cv:.1f}%\n")
+                
+                if cv < 15:
+                    self.correlation_text.insert(tk.END, "✅ **Excellent consistency** - Very stable scores\n")
+                elif cv < 25:
+                    self.correlation_text.insert(tk.END, "👍 **Good consistency** - Reliable performance\n")
+                elif cv < 35:
+                    self.correlation_text.insert(tk.END, "⚠️ **Moderate variation** - Some fluctuations\n")
+                else:
+                    self.correlation_text.insert(tk.END, "🔀 **High variation** - Inconsistent performance\n")
+                self.correlation_text.insert(tk.END, "\n")
+                
+                # Create visualizations
+                self.create_correlation_visualizations(scores)
+                
+            except ImportError:
+                self.correlation_text.insert(tk.END, 
+                    "⚠️ NumPy not installed. Install with: pip install numpy\n")
+            
+            self.correlation_text.insert(tk.END, "\n" + "="*60 + "\n")
+            self.correlation_text.insert(tk.END, "✅ **Analysis complete!**\n")
+            
+        except Exception as e:
+            self.correlation_text.insert(tk.END, f"❌ **Error:** {str(e)}\n")
+    
+    def create_correlation_visualizations(self, scores):
+        """Create visualizations for correlation analysis"""
+        try:
+            import numpy as np
+            
+            # Create figure
+            fig = Figure(figsize=(10, 8))
+            
+            # Plot 1: Score trend
+            ax1 = fig.add_subplot(221)
+            x_values = range(1, len(scores) + 1)
+            ax1.plot(x_values, scores, 'o-', color='#4CAF50', linewidth=2)
+            ax1.set_title('EQ Score Trend', fontweight='bold')
+            ax1.set_xlabel('Test Number')
+            ax1.set_ylabel('Score')
+            ax1.grid(True, alpha=0.3)
+            
+            # Add trend line if enough points
+            if len(scores) >= 3:
+                z = np.polyfit(x_values, scores, 1)
+                p = np.poly1d(z)
+                ax1.plot(x_values, p(x_values), "r--", alpha=0.5)
+                ax1.text(0.05, 0.95, f'Trend: {z[0]:.2f}/test', 
+                        transform=ax1.transAxes, fontsize=10,
+                        bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.5))
+            
+            # Plot 2: Score distribution
+            ax2 = fig.add_subplot(222)
+            ax2.hist(scores, bins=5, color='#2196F3', edgecolor='black', alpha=0.7)
+            ax2.set_title('Score Distribution', fontweight='bold')
+            ax2.set_xlabel('Score')
+            ax2.set_ylabel('Frequency')
+            ax2.grid(True, alpha=0.3)
+            
+            # Plot 3: Moving average
+            ax3 = fig.add_subplot(223)
+            if len(scores) >= 3:
+                window = min(3, len(scores))
+                moving_avg = [np.mean(scores[max(0, i-window+1):i+1]) 
+                             for i in range(len(scores))]
+                ax3.plot(x_values, moving_avg, 's-', color='#9C27B0', linewidth=2)
+                ax3.set_title(f'{window}-Test Moving Average', fontweight='bold')
+                ax3.set_xlabel('Test Number')
+                ax3.set_ylabel('Average Score')
+                ax3.grid(True, alpha=0.3)
+            
+            # Plot 4: Performance comparison
+            ax4 = fig.add_subplot(224)
+            if len(scores) >= 4:
+                half = len(scores) // 2
+                positions = ['First Half', 'Second Half']
+                averages = [np.mean(scores[:half]), np.mean(scores[half:])]
+                colors = ['#FF9800', '#4CAF50']
+                bars = ax4.bar(positions, averages, color=colors)
+                ax4.set_title('Performance Comparison', fontweight='bold')
+                ax4.set_ylabel('Average Score')
+                
+                # Add value labels
+                for bar, avg in zip(bars, averages):
+                    height = bar.get_height()
+                    ax4.text(bar.get_x() + bar.get_width()/2., height,
+                            f'{avg:.1f}', ha='center', va='bottom')
+            
+            fig.tight_layout()
+            
+            # Embed in tkinter
+            canvas = FigureCanvasTkAgg(fig, self.correlation_viz_frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            
+        except Exception as e:
+            self.correlation_text.insert(tk.END, f"⚠️ Could not create visualizations: {str(e)}\n")
+    
+    # ========== EXISTING METHODS (UPDATED) ==========
     def show_eq_trends(self, parent):
         """Show EQ score trends with matplotlib graph"""
         conn = sqlite3.connect("soulsense_db")
         cursor = conn.cursor()
-        cursor.execute("""
-        SELECT total_score, timestamp, id 
-        FROM scores 
-        WHERE username = ? 
-        ORDER BY id
-        """, (self.username,))
+        
+        # Check what columns exist
+        cursor.execute("PRAGMA table_info(scores)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        # Build query based on available columns
+        if 'timestamp' in columns:
+            cursor.execute("""
+                SELECT total_score, timestamp, id 
+                FROM scores 
+                WHERE username = ? 
+                ORDER BY id
+            """, (self.username,))
+        else:
+            cursor.execute("""
+                SELECT total_score, id 
+                FROM scores 
+                WHERE username = ? 
+                ORDER BY id
+            """, (self.username,))
+        
         data = cursor.fetchall()
         conn.close()
         
@@ -78,9 +317,9 @@ class AnalyticsDashboard:
         scores = [row[0] for row in data]
         timestamps = []
         
-        # Parse timestamps, handle missing ones
+        # Parse timestamps if available
         for i, row in enumerate(data):
-            if row[1]:
+            if len(row) > 1 and row[1]:
                 try:
                     timestamps.append(datetime.strptime(row[1], "%Y-%m-%d %H:%M:%S"))
                 except:
@@ -116,7 +355,7 @@ class AnalyticsDashboard:
         
         if len(scores) > 1:
             improvement = scores[-1] - scores[0]
-            improvement_pct = (improvement / scores[0]) * 100
+            improvement_pct = (improvement / scores[0]) * 100 if scores[0] != 0 else 0
             color = "green" if improvement > 0 else "red" if improvement < 0 else "blue"
             symbol = "↑" if improvement > 0 else "↓" if improvement < 0 else "→"
             tk.Label(right_col, text=f"Progress: {symbol} {improvement:+d} ({improvement_pct:+.1f}%)", 
@@ -302,31 +541,45 @@ class AnalyticsDashboard:
 
     def show_journal_analytics(self, parent):
         """Show journal analytics"""
-        session = get_session()
-        try:
-            rows = session.query(JournalEntry.sentiment_score, JournalEntry.emotional_patterns)\
-                .filter_by(username=self.username)\
-                .all()
-        finally:
-            session.close()
+        conn = sqlite3.connect("soulsense_db")
+        cursor = conn.cursor()
+        
+        # Check if journal_entries table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='journal_entries'")
+        if not cursor.fetchone():
+            conn.close()
+            tk.Label(parent, text="Journal feature not yet used", font=("Arial", 14)).pack(pady=50)
+            return
+        
+        # Get journal data
+        cursor.execute("""
+            SELECT sentiment_score, emotional_patterns 
+            FROM journal_entries 
+            WHERE username = ? 
+            ORDER BY id
+        """, (self.username,))
+        rows = cursor.fetchall()
+        conn.close()
         
         if not rows:
-            tk.Label(parent, text="No journal data available", font=("Arial", 14)).pack(pady=50)
+            tk.Label(parent, text="No journal entries found", font=("Arial", 14)).pack(pady=50)
             return
             
         tk.Label(parent, text="📝 Journal Analytics", font=("Arial", 14, "bold")).pack(pady=10)
         
-        sentiments = [r[0] for r in rows]
+        sentiments = [r[0] for r in rows if r[0] is not None]
         
         # Stats
         stats_frame = tk.Frame(parent)
         stats_frame.pack(fill=tk.X, padx=20, pady=10)
         
         tk.Label(stats_frame, text=f"Total Entries: {len(rows)}", font=("Arial", 12)).pack(anchor="w")
-        tk.Label(stats_frame, text=f"Avg Sentiment: {sum(sentiments)/len(sentiments):.1f}", 
-                font=("Arial", 12)).pack(anchor="w")
-        tk.Label(stats_frame, text=f"Most Positive: {max(sentiments):.1f}", 
-                font=("Arial", 12)).pack(anchor="w")
+        
+        if sentiments:
+            tk.Label(stats_frame, text=f"Avg Sentiment: {sum(sentiments)/len(sentiments):.1f}", 
+                    font=("Arial", 12)).pack(anchor="w")
+            tk.Label(stats_frame, text=f"Most Positive: {max(sentiments):.1f}", 
+                    font=("Arial", 12)).pack(anchor="w")
         
         # Patterns
         patterns_frame = tk.Frame(parent)
@@ -346,7 +599,7 @@ class AnalyticsDashboard:
         patterns_text.pack(fill=tk.BOTH, expand=True)
         
         for pattern, count in pattern_counts.most_common(3):
-            percentage = (count / len(rows)) * 100
+            percentage = (count / len(rows)) * 100 if len(rows) > 0 else 0
             patterns_text.insert(tk.END, f"{pattern}: {count} times ({percentage:.1f}%)\n")
         
         patterns_text.config(state=tk.DISABLED)
@@ -369,25 +622,37 @@ class AnalyticsDashboard:
         """Generate insights"""
         insights = []
         
-        session = get_session()
-        try:
-            # EQ insights
-            eq_rows = session.query(Score.total_score)\
-                .filter_by(username=self.username)\
-                .order_by(Score.id)\
-                .all()
-            scores = [r[0] for r in eq_rows]
-            
-            # Journal insights
-            j_rows = session.query(JournalEntry.sentiment_score)\
-                .filter_by(username=self.username)\
-                .all()
-            sentiments = [r[0] for r in j_rows]
-        finally:
-            session.close()
+        # Get EQ scores
+        conn = sqlite3.connect("soulsense_db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT total_score 
+            FROM scores 
+            WHERE username = ? 
+            ORDER BY id
+        """, (self.username,))
+        eq_rows = cursor.fetchall()
+        
+        # Get journal data if table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='journal_entries'")
+        journal_exists = cursor.fetchone()
+        
+        if journal_exists:
+            cursor.execute("""
+                SELECT sentiment_score 
+                FROM journal_entries 
+                WHERE username = ?
+            """, (self.username,))
+            j_rows = cursor.fetchall()
+        else:
+            j_rows = []
+        
+        conn.close()
+        
+        scores = [r[0] for r in eq_rows]
         
         if len(scores) > 1:
-            improvement = ((scores[-1] - scores[0]) / scores[0]) * 100
+            improvement = ((scores[-1] - scores[0]) / scores[0]) * 100 if scores[0] != 0 else 0
             if improvement > 10:
                 insights.append(f"📈 Great progress! Your EQ improved by {improvement:.1f}%")
             elif improvement > 0:
@@ -395,14 +660,16 @@ class AnalyticsDashboard:
             else:
                 insights.append("💪 Focus on emotional awareness to boost EQ scores")
         
-        if sentiments:
-            avg_sentiment = sum(sentiments) / len(sentiments)
-            if avg_sentiment > 20:
-                insights.append("😊 Your journal shows positive emotional tone - keep it up!")
-            elif avg_sentiment < -20:
-                insights.append("🤗 Consider stress management techniques for better emotional balance")
-            else:
-                insights.append("⚖️ You maintain balanced emotional tone in your reflections")
+        if j_rows:
+            sentiments = [r[0] for r in j_rows if r[0] is not None]
+            if sentiments:
+                avg_sentiment = sum(sentiments) / len(sentiments)
+                if avg_sentiment > 20:
+                    insights.append("😊 Your journal shows positive emotional tone - keep it up!")
+                elif avg_sentiment < -20:
+                    insights.append("🤗 Consider stress management techniques for better emotional balance")
+                else:
+                    insights.append("⚖️ You maintain balanced emotional tone in your reflections")
         
         if not insights:
             insights.append("📝 Complete more assessments and journal entries for insights!")
