@@ -3,46 +3,18 @@ import tkinter as tk
 from tkinter import messagebox
 import time
 
-#HELP IN BUTTON ANIMATION 
-def animated_button(
-    parent,
-    text,
-    command,
-    bg="#4CAF50",
-    hover_bg="#43A047",
-    active_bg="#388E3C",
-    fg="white",
-    font=("Arial", 14, "bold"),
-    width=15
-):
-    btn = tk.Button(
-        parent,
-        text=text,
-        command=command,
-        bg=bg,
-        fg=fg,
-        activebackground=active_bg,
-        font=font,
-        width=width,
-        relief="flat"
-    )
-
-    btn.bind("<Enter>", lambda e: btn.config(bg=hover_bg, cursor="hand2"))
-    btn.bind("<Leave>", lambda e: btn.config(bg=bg))
-    btn.bind("<ButtonPress-1>", lambda e: btn.config(bg=active_bg))
-    btn.bind("<ButtonRelease-1>", lambda e: btn.config(bg=hover_bg))
-
-    return btn
-
 #RETRY MECHANISM
 def retry_operation(operation, retries=3, delay=0.5, backoff=2):
-    for _ in range(retries):
+    attempt = 0
+    while attempt < retries:
         try:
             return operation()
         except (sqlite3.OperationalError, IOError):
+            attempt += 1
+            if attempt == retries:
+                raise
             time.sleep(delay)
             delay *= backoff
-    raise
 
 #DATABASE SETUP
 conn = sqlite3.connect("soulsense_db.db")
@@ -54,10 +26,12 @@ CREATE TABLE IF NOT EXISTS scores (
     username TEXT,
     age INTEGER,
     total_score INTEGER,
+
     avg_response REAL,
     max_response INTEGER,
     min_response INTEGER,
     score_variance REAL,
+
     questions_attempted INTEGER,
     completion_ratio REAL,
     avg_time_per_question REAL,
@@ -79,8 +53,10 @@ questions = [
 def compute_analytics(responses, time_taken, total_questions):
     n = len(responses)
     if n == 0:
-        return dict(avg=0, max=0, min=0, variance=0,
-                    attempted=0, completion=0, avg_time=0)
+        return {
+            "avg": 0, "max": 0, "min": 0, "variance": 0,
+            "attempted": 0, "completion": 0, "avg_time": 0
+        }
 
     avg = sum(responses) / n
     variance = sum((x - avg) ** 2 for x in responses) / n
@@ -103,13 +79,17 @@ def show_splash():
     splash.configure(bg="#1E1E2F")
     splash.resizable(False, False)
 
-    tk.Label(splash, text="SoulSense",
-             font=("Arial", 32, "bold"),
-             fg="white", bg="#1E1E2F").pack(pady=40)
+    tk.Label(
+        splash, text="SoulSense",
+        font=("Arial", 32, "bold"),
+        fg="white", bg="#1E1E2F"
+    ).pack(pady=40)
 
-    tk.Label(splash, text="Emotional Awareness Assessment",
-             font=("Arial", 14),
-             fg="#CCCCCC", bg="#1E1E2F").pack()
+    tk.Label(
+        splash, text="Emotional Awareness Assessment",
+        font=("Arial", 14),
+        fg="#CCCCCC", bg="#1E1E2F"
+    ).pack()
 
     tk.Label(
         splash,
@@ -118,7 +98,6 @@ def show_splash():
         fg="white",
         bg="#1E1E2F"
     ).pack(pady=30)
-    
     splash.after(2500, lambda: (splash.destroy(), show_user_details()))
     splash.mainloop()
 
@@ -136,38 +115,65 @@ def show_user_details():
              font=("Arial", 20, "bold")).pack(pady=20)
 
     tk.Label(root, text="Enter your name:", font=("Arial", 15)).pack()
-    tk.Entry(root, textvariable=username, font=("Arial", 15)).pack(pady=8)
+    tk.Entry(root, textvariable=username,
+             font=("Arial", 15), width=25).pack(pady=8)
 
     tk.Label(root, text="Enter your age:", font=("Arial", 15)).pack()
-    tk.Entry(root, textvariable=age, font=("Arial", 15)).pack(pady=8)
+    tk.Entry(root, textvariable=age,
+             font=("Arial", 15), width=25).pack(pady=8)
 
     def start():
         if not username.get().strip():
-            messagebox.showwarning("Name Required", "Please enter your name.")
+            messagebox.showwarning(
+                "Name Required",
+                "Please enter your name to continue."
+            )
             return
+
         if not age.get().isdigit():
-            messagebox.showwarning("Invalid Age", "Age must be numeric.")
+            messagebox.showwarning(
+                "Invalid Age",
+                "Please enter your age using numbers only."
+            )
             return
+
         root.destroy()
         start_quiz(username.get(), int(age.get()))
 
-    animated_button(root, "Start Assessment", start, width=20).pack(pady=25)
+    tk.Button(
+        root, text="Start Assessment",
+        command=start,
+        bg="#4CAF50", fg="white",
+        font=("Arial", 14, "bold"),
+        width=20
+    ).pack(pady=25)
+
     root.mainloop()
 
-# QUIZ
+#QUIZ
 def start_quiz(username, age):
     filtered_questions = [q for q in questions if q["age_min"] <= age <= q["age_max"]]
+
     if not filtered_questions:
-        messagebox.showinfo("No Questions", "No questions available for your age group.")
+        messagebox.showinfo(
+            "No Questions Available",
+            "There are currently no questions available for your age group.\n"
+            "Please check back later."
+        )
         return
+
+    total_questions = len(filtered_questions)
 
     quiz = tk.Tk()
     quiz.title("SoulSense Quiz")
     quiz.geometry("750x600")
     quiz.resizable(False, False)
 
-    responses, score, current_q = [], 0, 0
+    responses = []
+    score = 0
+    current_q = 0
     var = tk.IntVar()
+
     start_time = time.time()
 
     timer_label = tk.Label(quiz, font=("Arial", 14, "bold"), fg="#1E88E5")
@@ -191,15 +197,18 @@ def start_quiz(username, age):
         ("Agree", 4),
         ("Strongly Agree", 5)
     ]:
-        tk.Radiobutton(quiz, text=text, variable=var,
-                       value=val, font=("Arial", 14)).pack(anchor="w", padx=60)
+        tk.Radiobutton(
+            quiz, text=text,
+            variable=var, value=val,
+            font=("Arial", 14)
+        ).pack(anchor="w", padx=60)
 
     def load_question():
         question_label.config(text=filtered_questions[current_q]["text"])
 
     def save_and_exit(title):
         elapsed = int(time.time() - start_time)
-        analytics = compute_analytics(responses, elapsed, len(filtered_questions))
+        analytics = compute_analytics(responses, elapsed, total_questions)
 
         def db_save():
             cursor.execute("""
@@ -221,42 +230,64 @@ def start_quiz(username, age):
         except Exception:
             messagebox.showerror(
                 "Save Failed",
-                "We couldn’t save your results due to a temporary issue.\nPlease try again."
+                "We couldn’t save your results due to a temporary issue.\n"
+                "Please try again in a few moments."
             )
             quiz.destroy()
             return
 
         messagebox.showinfo(
             title,
+            f"Assessment Summary\n\n"
             f"Score: {score}\n"
             f"Questions Attempted: {analytics['attempted']}\n"
-            f"Time Taken: {elapsed} sec"
+            f"Time Taken: {elapsed} seconds"
         )
+
         quiz.destroy()
         conn.close()
 
     def next_question():
         nonlocal current_q, score
         if var.get() == 0:
-            messagebox.showwarning("Selection Required", "Please select an option.")
+            messagebox.showwarning(
+                "Selection Required",
+                "Please select an option before moving to the next question."
+            )
             return
+
         responses.append(var.get())
         score += var.get()
         var.set(0)
         current_q += 1
-        if current_q < len(filtered_questions):
+
+        if current_q < total_questions:
             load_question()
         else:
             save_and_exit("Assessment Completed")
 
     def stop_test():
-        if messagebox.askyesno("Stop Assessment", "Stop and save progress?"):
+        if messagebox.askyesno(
+            "Stop Assessment",
+            "Are you sure you want to stop the assessment?\n"
+            "Your progress will be saved."
+        ):
             save_and_exit("Assessment Stopped")
 
-    animated_button(quiz, "Next", next_question).pack(pady=15)
-    animated_button(
-        quiz, "Stop Test", stop_test,
-        bg="#E53935", hover_bg="#D32F2F", active_bg="#B71C1C"
+    tk.Button(
+        quiz, text="Next",
+        command=next_question,
+        bg="#4CAF50", fg="white",
+        font=("Arial", 14, "bold"),
+        width=15
+    ).pack(pady=15)
+
+    tk.Button(
+        quiz, text="Stop Test",
+        command=stop_test,
+        bg="#E53935", fg="white",
+        font=("Arial", 13, "bold"),
+        width=15
     ).pack()
 
     load_question()
