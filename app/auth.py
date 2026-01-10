@@ -1,4 +1,4 @@
-import hashlib
+import bcrypt
 from datetime import datetime
 from app.db import get_session
 from app.models import User
@@ -9,7 +9,17 @@ class AuthManager:
         self.current_user = None
     
     def hash_password(self, password):
-        return hashlib.sha256(password.encode()).hexdigest()
+        """Hash password using bcrypt with configurable rounds (default: 12)."""
+        salt = bcrypt.gensalt(rounds=12)
+        return bcrypt.hashpw(password.encode(), salt).decode()
+    
+    def verify_password(self, password, password_hash):
+        """Verify password against bcrypt hash."""
+        try:
+            return bcrypt.checkpw(password.encode(), password_hash.encode())
+        except Exception as e:
+            logging.error(f"Password verification failed: {e}")
+            return False
     
     def register_user(self, username, password):
         if len(username) < 3:
@@ -43,10 +53,9 @@ class AuthManager:
     def login_user(self, username, password):
         session = get_session()
         try:
-            password_hash = self.hash_password(password)
-            user = session.query(User).filter_by(username=username, password_hash=password_hash).first()
+            user = session.query(User).filter_by(username=username).first()
             
-            if user:
+            if user and self.verify_password(password, user.password_hash):
                 user.last_login = datetime.utcnow().isoformat()
                 session.commit()
                 self.current_user = username

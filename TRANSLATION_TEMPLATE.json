@@ -1,0 +1,120 @@
+{
+  "_comment": "Copy this template and translate all values to your language. Do NOT translate the keys (left side of colon).",
+  "_language_code": "REPLACE_WITH_YOUR_LANGUAGE_CODE (e.g., fr, de, pt)",
+  "_language_name": "REPLACE_WITH_LANGUAGE_NAME (e.g., Français, Deutsch, Português)",
+  
+  "app_title": "SoulSense Assessment",
+  "user_details_title": "SoulSense - User Details",
+  "enter_name": "Enter your name:",
+  "enter_age": "Enter your age:",
+  "start_assessment": "Start Assessment",
+  "open_journal": "📝 Open Journal",
+  "view_dashboard": "📊 View Dashboard",
+  
+  "errors": {
+    "empty_name": "Please enter your name",
+    "invalid_age": "Please enter a valid age (numbers only)",
+    "minimum_age": "Age must be at least 12",
+    "select_option": "Please select an option"
+  },
+  
+  "quiz": {
+    "question_counter": "Question {current} of {total}",
+    "strongly_disagree": "Strongly Disagree",
+    "disagree": "Disagree",
+    "neutral": "Neutral",
+    "agree": "Agree",
+    "strongly_agree": "Strongly Agree",
+    "previous": "← Previous",
+    "next": "Next →",
+    "finish": "Finish ✓",
+    "warning": "Warning"
+  },
+  
+  "questions": [
+    "You can recognize your emotions as they happen.",
+    "You find it easy to understand why you feel a certain way.",
+    "You can control your emotions even in stressful situations.",
+    "You reflect on your emotional reactions to situations.",
+    "You are aware of how your emotions affect others."
+  ],
+  
+  "results": {
+    "completed": "Completed",
+    "thank_you": "Thank you {username}!",
+    "your_score": "Your EQ Score: {score} out of {max_score}",
+    "average": "Average: {average} per question",
+    "view_dashboard_prompt": "View your dashboard?"
+  },
+  
+  "journal": {
+    "title": "Emotional Journal",
+    "daily_reflection": "Daily Emotional Reflection",
+    "date": "Date: {date}",
+    "write_reflection": "Write your emotional reflection:",
+    "save_analyze": "Save & Analyze",
+    "view_past": "View Past Entries",
+    "dashboard": "📊 Dashboard",
+    "close": "Close",
+    "empty_entry": "Empty Entry",
+    "empty_warning": "Please write something before saving.",
+    "too_short": "Too Short",
+    "short_warning": "Please write at least 10 characters for meaningful analysis.",
+    "analysis_title": "AI Analysis Results",
+    "emotional_analysis": "Emotional Analysis",
+    "sentiment_score": "Sentiment Score: {score}",
+    "positive_tone": "Positive emotional tone detected",
+    "negative_tone": "Negative emotional tone detected",
+    "neutral_tone": "Neutral emotional tone",
+    "emotional_patterns": "Emotional Patterns:",
+    "past_entries_title": "Past Journal Entries",
+    "emotional_journey": "Your Emotional Journey",
+    "no_entries": "No journal entries found. Start writing to track your emotional journey!",
+    "entry_date": "Date: {date}",
+    "entry_sentiment": "Sentiment: {score} | Patterns: {patterns}",
+    "entry_content": "Entry: {content}"
+  },
+  
+  "dashboard": {
+    "title": "📊 Emotional Health Dashboard",
+    "analytics": "📊 Emotional Health Analytics",
+    "correlation_tab": "🔗 Correlation",
+    "eq_trends_tab": "📈 EQ Trends",
+    "time_based_tab": "Time-Based Analysis",
+    "journal_tab": "📝 Journal Analytics",
+    "insights_tab": "🔍 Insights",
+    "correlation_title": "🔗 Correlation Analysis",
+    "correlation_desc": "Analyze patterns and relationships in your EQ scores",
+    "run_analysis": "Run Correlation Analysis",
+    "no_data": "No EQ data available",
+    "eq_progress": "📈 EQ Score Progress Over Time",
+    "total_attempts": "Total Attempts: {count}",
+    "latest_score": "Latest Score: {score}",
+    "best_score": "Best Score: {score}",
+    "trend_title": "EQ Score Trend",
+    "trend_xlabel": "Test Number",
+    "trend_ylabel": "Score",
+    "distribution_title": "Score Distribution",
+    "distribution_xlabel": "Score",
+    "distribution_ylabel": "Frequency",
+    "moving_avg_title": "{window}-Test Moving Average",
+    "moving_avg_ylabel": "Average Score",
+    "performance_title": "Performance Comparison",
+    "performance_ylabel": "Average Score",
+    "first_half": "First Half",
+    "second_half": "Second Half"
+  },
+  
+  "patterns": {
+    "stress_indicators": "Stress indicators detected",
+    "social_focus": "Social/relationship focus",
+    "growth_oriented": "Growth-oriented thinking",
+    "self_reflective": "Self-reflective content",
+    "general_expression": "General emotional expression"
+  },
+  
+  "settings": {
+    "language": "Language",
+    "select_language": "Select Language"
+  }
+}

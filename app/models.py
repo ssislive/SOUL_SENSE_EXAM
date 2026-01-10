@@ -1,28 +1,22 @@
-from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, Boolean, Index, func, event
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey, Boolean, Index, func, event, text
 from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
+# Create Base
 Base = declarative_base()
-logger = logging.getLogger(__name__)
 
 class User(Base):
     __tablename__ = 'users'
-
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, unique=True, nullable=False, index=True)  # Added index
+    username = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    created_at = Column(String, default=lambda: datetime.utcnow().isoformat(), index=True)  # Added index
-    last_login = Column(String, nullable=True, index=True)  # Added index
+    created_at = Column(String, default=lambda: datetime.utcnow().isoformat())
+    last_login = Column(String, nullable=True)
 
-    # Relationships
     scores = relationship("Score", back_populates="user", cascade="all, delete-orphan")
     responses = relationship("Response", back_populates="user", cascade="all, delete-orphan")
-
-    # Composite index for common query patterns
-    __table_args__ = (
-        Index('idx_user_username_created', 'username', 'created_at'),
-    )
 
 class Score(Base):
     __tablename__ = 'scores'
@@ -30,6 +24,8 @@ class Score(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String, index=True)  # Added index
     total_score = Column(Integer, index=True)  # Added index
+    sentiment_score = Column(Float, default=0.0)  # New: NLTK Sentiment Score
+    reflection_text = Column(Text, nullable=True) # New: Open-ended response
     age = Column(Integer, index=True)  # Added index
     detailed_age_group = Column(String, index=True)  # Added index
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)  # Added index
@@ -68,74 +64,37 @@ class Response(Base):
         Index('idx_response_agegroup_timestamp', 'detailed_age_group', 'timestamp'),
     )
 
-class QuestionCategory(Base):
-    __tablename__ = 'question_category'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, index=True)  # Added index
-    description = Column(Text)
-
-    # Index for name lookups
-    __table_args__ = (
-        Index('idx_category_name', 'name'),
-    )
-
 class Question(Base):
     __tablename__ = 'question_bank'
-
     id = Column(Integer, primary_key=True, autoincrement=True)
-    question_text = Column(Text, nullable=False)
-    category_id = Column(Integer, default=0, index=True)  # Added index
-    difficulty = Column(Integer, default=1, index=True)  # Added index
-    min_age = Column(Integer, default=0)
-    max_age = Column(Integer, default=120)
-    weight = Column(Float, default=1.0)
-    is_active = Column(Integer, default=1, index=True)  # Added index
-    tooltip = Column(Text, nullable=True)
-    created_at = Column(String, default=lambda: datetime.utcnow().isoformat(), index=True)  # Added index
+    question_text = Column(String)
+    category_id = Column(Integer)
+    difficulty = Column(Integer)
+    is_active = Column(Integer, default=1)
 
-    # Composite indexes for optimized querying
-    __table_args__ = (
-        Index('idx_question_active_difficulty', 'is_active', 'difficulty'),
-        Index('idx_question_category_active', 'category_id', 'is_active'),
-        Index('idx_question_active_created', 'is_active', 'created_at'),
-        Index('idx_question_age_range', 'min_age', 'max_age'),
-        Index('idx_question_fulltext', 'question_text'),  # For full-text search if supported
-    )
-
-class QuestionMetadata(Base):
-    __tablename__ = 'question_metadata'
-    
-    question_id = Column(Integer, primary_key=True, index=True)  # Added index
-    source = Column(String, index=True)  # Added index
-    version = Column(String, index=True)  # Added index
-    tags = Column(String, index=True)  # Added index
-
-    # Composite index for version and source queries
-    __table_args__ = (
-        Index('idx_metadata_source_version', 'source', 'version'),
-        Index('idx_metadata_tags', 'tags'),
-    )
+class QuestionCategory(Base):
+    __tablename__ = 'question_category'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String)
 
 class JournalEntry(Base):
     __tablename__ = 'journal_entries'
-
+    
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, index=True)  # Added index
-    entry_date = Column(String, default=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), index=True)  # Added index
+    username = Column(String)
+    entry_date = Column(String, default=lambda: datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
     content = Column(Text)
-    sentiment_score = Column(Float, index=True)  # Added index
+    sentiment_score = Column(Float)
     emotional_patterns = Column(Text)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)  # Added user_id and index
 
-    # Composite indexes for common journal queries
-    __table_args__ = (
-        Index('idx_journal_username_date', 'username', 'entry_date'),
-        Index('idx_journal_user_sentiment', 'user_id', 'sentiment_score'),
-        Index('idx_journal_date_sentiment', 'entry_date', 'sentiment_score'),
-    )
+# Simple function to get session (from upstream)
+def get_session():
+    from app.db import get_session as get_db_session
+    return get_db_session()
 
 # ==================== DATABASE PERFORMANCE OPTIMIZATIONS ====================
+
+logger = logging.getLogger(__name__)
 
 @event.listens_for(Base.metadata, 'before_create')
 def receive_before_create(target, connection, **kw):
@@ -144,48 +103,47 @@ def receive_before_create(target, connection, **kw):
     
     # SQLite specific optimizations
     if connection.engine.name == 'sqlite':
-        connection.execute('PRAGMA journal_mode = WAL')  # Write-Ahead Logging for better concurrency
-        connection.execute('PRAGMA synchronous = NORMAL')  # Good balance of safety and performance
-        connection.execute('PRAGMA cache_size = -2000')  # 2MB cache
-        connection.execute('PRAGMA temp_store = MEMORY')  # Store temp tables in memory
-        connection.execute('PRAGMA mmap_size = 268435456')  # 256MB memory map
-        connection.execute('PRAGMA foreign_keys = ON')  # Enable foreign key constraints
+        connection.execute(text('PRAGMA journal_mode = WAL'))  # Write-Ahead Logging for better concurrency
+        connection.execute(text('PRAGMA synchronous = NORMAL'))  # Good balance of safety and performance
+        connection.execute(text('PRAGMA cache_size = -2000'))  # 2MB cache
+        connection.execute(text('PRAGMA temp_store = MEMORY'))  # Store temp tables in memory
+        connection.execute(text('PRAGMA mmap_size = 268435456'))  # 256MB memory map
+        connection.execute(text('PRAGMA foreign_keys = ON'))  # Enable foreign key constraints
 
 @event.listens_for(Question.__table__, 'after_create')
 def receive_after_create_question(target, connection, **kw):
     """Create additional indexes and optimizations after question table creation"""
     logger.info("Creating question search optimization indexes...")
     
-    # Create full-text search virtual table if needed (for larger question banks)
     try:
         # Check if FTS5 extension is available
-        connection.execute("SELECT fts5(?)", ('test',))
+        connection.execute(text("SELECT fts5(?)"), ('test',))
         
         # Create virtual table for full-text search
-        connection.execute("""
+        connection.execute(text("""
             CREATE VIRTUAL TABLE IF NOT EXISTS question_search 
             USING fts5(id, question_text, content='question_bank', content_rowid='id')
-        """)
+        """))
         
         # Create triggers to keep the search index updated
-        connection.execute("""
+        connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS question_ai AFTER INSERT ON question_bank BEGIN
                 INSERT INTO question_search(rowid, question_text) VALUES (new.id, new.question_text);
             END;
-        """)
+        """))
         
-        connection.execute("""
+        connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS question_ad AFTER DELETE ON question_bank BEGIN
                 INSERT INTO question_search(question_search, rowid, question_text) VALUES('delete', old.id, old.question_text);
             END;
-        """)
+        """))
         
-        connection.execute("""
+        connection.execute(text("""
             CREATE TRIGGER IF NOT EXISTS question_au AFTER UPDATE ON question_bank BEGIN
                 INSERT INTO question_search(question_search, rowid, question_text) VALUES('delete', old.id, old.question_text);
                 INSERT INTO question_search(rowid, question_text) VALUES (new.id, new.question_text);
             END;
-        """)
+        """))
         
         logger.info("Full-text search indexes created for questions")
     except:
@@ -203,6 +161,9 @@ class QuestionCache(Base):
     category_id = Column(Integer, index=True)
     difficulty = Column(Integer, index=True)
     is_active = Column(Integer, default=1, index=True)
+    min_age = Column(Integer, default=0)
+    max_age = Column(Integer, default=120)
+    tooltip = Column(Text, nullable=True)
     cached_at = Column(String, default=lambda: datetime.utcnow().isoformat())
     access_count = Column(Integer, default=0, index=True)
     
@@ -232,24 +193,25 @@ class StatisticsCache(Base):
 def create_performance_indexes(engine):
     """Create additional performance indexes that might be needed"""
     with engine.connect() as conn:
+        conn.commit() 
         # Create indexes that might not be in the model definitions
-        conn.execute("""
+        conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_responses_composite 
             ON responses(username, question_id, response_value, timestamp)
-        """)
+        """))
         
-        conn.execute("""
+        conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_scores_composite 
             ON scores(username, total_score, age, timestamp)
-        """)
+        """))
         
-        conn.execute("""
+        conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_questions_quick_load 
             ON question_bank(is_active, id, question_text)
-        """)
+        """))
         
         # Optimize the database
-        conn.execute('PRAGMA optimize')
+        conn.execute(text('PRAGMA optimize'))
         
         logger.info("Performance indexes created and database optimized")
 

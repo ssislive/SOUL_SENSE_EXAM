@@ -1,4 +1,40 @@
 
+import json
+import os
+import logging
+
+SETTINGS_FILE = "settings.json"
+DEFAULT_SETTINGS = {
+    "question_count": 10,
+    "theme": "light",
+    "sound_effects": True
+}
+
+def load_settings():
+    """Load user settings from file or use defaults"""
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, 'r') as f:
+                settings = json.load(f)
+                # Ensure all default keys exist
+                for key in DEFAULT_SETTINGS:
+                    if key not in settings:
+                        settings[key] = DEFAULT_SETTINGS[key]
+                return settings
+        except Exception:
+            logging.error("Failed to load settings", exc_info=True)
+    return DEFAULT_SETTINGS.copy()
+
+def save_settings(settings):
+    """Save user settings to file"""
+    try:
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(settings, f, indent=2)
+        return True
+    except Exception:
+        logging.error("Failed to save settings", exc_info=True)
+        return False
+
 def compute_age_group(age):
     """
     Compute age group category based on age.

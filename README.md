@@ -1,17 +1,96 @@
 # 🧠 Soul Sense EQ Test
 
 Soul Sense EQ Test is a desktop-based Emotional Intelligence (EQ) assessment application built using Python, Tkinter, and SQLite.
-It provides an interactive self-reflection test, persists results locally, and is designed with maintainability, testability, and extensibility in mind.
+It provides a✅ Tip: If you see `ModuleNotFoundError`, it usually means your virtual environment is **not active** or the package isn't installed inside it.
+
+---
+
+## 🌍 Multi-language Support
+
+SoulSense now supports multiple languages with easy switching!
+
+### Supported Languages
+- **English** (default)
+- **हिंदी (Hindi)**
+- **Español (Spanish)**
+
+### Quick Start
+1. Launch the application
+2. Select your language from the dropdown at the top of the main screen
+3. All UI elements update instantly
+4. Your preference is saved automatically
+
+### For Contributors
+Want to add your language? See our [I18N Guide](I18N_GUIDE.md) for:
+- Step-by-step instructions
+- Translation template
+- Testing guidelines
+
+---
+
+## 🔐 Admin Interface
+
+SoulSense includes a powerful admin interface for managing questions and categories.
+
+### Features
+- **GUI Admin Panel** - User-friendly graphical interface
+- **CLI Tool** - Command-line interface for automation
+- **Secure Access** - Password-protected admin accounts
+- **CRUD Operations** - Create, Read, Update, Delete questions
+- **Category Management** - Organize questions by category
+- **Metadata Support** - Age range, difficulty, weight customization
+
+### Quick Start
+
+**Create Admin Account:**
+```bash
+python admin_cli.py create-admin --no-auth
+```
+
+**Launch GUI:**
+```bash
+python admin_interface.py
+```
+
+**CLI Commands:**
+```bash
+python admin_cli.py list                    # List all questions
+python admin_cli.py add                     # Add new question
+python admin_cli.py view --id 1             # View question
+python admin_cli.py update --id 1           # Update question
+python admin_cli.py delete --id 1           # Delete question
+python admin_cli.py categories              # View statistics
+```
+
+### Documentation
+See [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for comprehensive documentation.
+
+---
+
+## ▶️ How to Runeractive self-reflection test, persists results locally, and is designed with maintainability, testability, and extensibility in mind.
+
+**🌍 Now available in multiple languages: English, Hindi (हिंदी), and Spanish (Español)!**
 
 ---
 
 ## ✨ Features
 
+- **🌐 Multi-language Support (NEW!)**
+  - English, Hindi, and Spanish translations
+  - Easy language switching from the UI
+  - Persistent language preferences
+  - Simple framework for adding more languages
 - **User Authentication System**
   - Secure user registration and login
   - Password hashing with SHA-256
   - Session management with logout functionality
   - User-specific data tracking
+- **Outlier Detection & Data Quality**
+  - Statistical outlier detection using multiple methods (Z-score, IQR, MAD, Modified Z-score)
+  - Ensemble outlier detection with consensus voting
+  - Inconsistency pattern detection for users
+  - Age-group and global analysis capabilities
+  - Comprehensive data quality reporting
 - Interactive Tkinter-based GUI
 - SQLite-backed persistence for questions, responses, and scores
 - Questions loaded once into the database, then read-only at runtime
@@ -41,9 +120,70 @@ The journal feature allows users to:
 
 **AI Analysis Capabilities:**
 
-- **Sentiment Scoring:** Analyzes positive/negative emotional tone
+- **Sentiment Scoring:** Analyzes positive/negative emotional tone using NLTK's VADER
 - **Pattern Detection:** Identifies stress indicators, relationship focus, growth mindset, and self-reflection
 - **Emotional Tracking:** Monitors emotional trends over time
+
+---
+
+## 🧠 Sentiment Analysis Integration
+
+### Overview
+
+Soul Sense integrates **NLTK's VADER (Valence Aware Dictionary and sEntiment Reasoner)** sentiment analysis into both the EQ test and journal features, providing a more comprehensive understanding of users' emotional states.
+
+### How It Helps Users
+
+#### 1. **Captures Emotional Context Beyond Multiple Choice**
+
+- MCQ questions only capture structured responses (Never/Sometimes/Often/Always)
+- Open-ended reflection reveals **actual emotional state** in the user's own words
+- Detects disconnect between quantitative scores and qualitative feelings
+
+#### 2. **More Nuanced Risk Assessment**
+
+The AI Analysis considers:
+
+- **Quantitative data**: EQ scores (structured responses)
+- **Qualitative data**: Sentiment score from written reflection (-100 to +100)
+
+This dual analysis provides insights like:
+
+- `High EQ + Negative Sentiment` = Good skills but currently struggling
+- `Low EQ + Positive Sentiment` = Room for growth but good emotional resilience
+
+#### 3. **Personalized Recommendations**
+
+Based on sentiment ranges:
+
+- **Negative (-20 to -100)**: Suggests journaling, professional support, stress management
+- **Neutral (-20 to +20)**: Encourages continued practice
+- **Positive (+20 to +100)**: Reinforces strengths, suggests mentorship
+
+#### 4. **Validation & Empathy**
+
+- Users feel heard when their written reflection is analyzed
+- System acknowledges current emotional state
+- Creates more human interaction vs. just numbers
+
+### Technical Implementation
+
+**VADER Features:**
+
+- ✅ Understands negation: "I am NOT happy" → negative
+- ✅ Detects intensity: "devastatingly sad" vs. "a bit sad"
+- ✅ Works on casual, everyday language
+- ✅ Real-time analysis with no external API calls
+
+### Where Results Are Shown
+
+1. **Results Dashboard**: Displays sentiment score alongside EQ score
+2. **AI Analysis Popup**: Comprehensive analysis with:
+   - Risk level and confidence
+   - Sentiment score interpretation
+   - Top influencing factors
+   - Personalized recommendations based on both EQ and sentiment
+3. **Journal Analytics**: Tracks sentiment trends over time (when using Daily Journal)
 
 ---
 
@@ -168,19 +308,55 @@ pip install -r requirements.txt -->
 
 ## ▶️ How to Run
 
-**First Time Setup:**
+### 1. Database Setup
 
-1. Load questions into the database (one-time step):
+Ensure your database schema is up to date:
 
 ```bash
-python -m scripts.load_questions
+python -m alembic upgrade head
 ```
 
-2. Start the application:
+### 2. Start the Application
+
+Launch the SoulSense interface:
 
 ```bash
 python -m app.main
 ```
+
+## 🛠️ Troubleshooting & Developer Notes
+
+### Common Issues & Fixes
+
+1.  **"Failed to fetch questions from DB" / `KeyError: min_age`**
+
+    - **Cause**: Database schema is outdated (missing columns in `QuestionCache`).
+    - **Fix**: Run migration or reset database:
+      ```bash
+      python -m scripts.fix_db
+      python -m scripts.load_questions
+      ```
+
+2.  **`ImportError: cannot import name 'get_session' from 'app.models'`**
+
+    - **Fix**: This project strictly separates DB connection logic (`app.db`) from models (`app.models`). Ensure you import `get_session` from `app.db`.
+
+3.  **Application Freeze on Startup**
+
+    - **Cause**: Matplotlib trying to use an interactive backend (TkAgg) conflicting with Tkinter main loop.
+    - **Fix**: Ensure `matplotlib.use('Agg')` is called _before_ importing `pyplot`.
+
+4.  **`ObjectNotExecutableError`**
+    - **Cause**: SQLAlchemy 2.0+ requires raw SQL to be wrapped in `text()`.
+    - **Fix**: Use `from sqlalchemy import text` and wrap strings: `connection.execute(text("SELECT ..."))`.
+
+### For Contributors
+
+- Always install new dependencies via `pip install -r requirements.txt`.
+- If you change the database models, generate a migration: `python -m alembic revision --autogenerate -m "message"`.
+- This project uses **SQLAlchemy 2.0** syntax. Avoid legacy query patterns.
+
+> **Note:** Do not use `npm run dev`. This is a pure Python application.
 
 **Authentication Flow:**
 
@@ -212,6 +388,71 @@ From the project root:
 
 Tests use temporary SQLite databases and do not affect production data.
 
+### Running Outlier Detection Tests
+
+```bash
+    python -m pytest tests/test_outlier_detection.py -v
+```
+
+---
+
+## 📊 Outlier Detection Feature
+
+### Overview
+
+The outlier detection module identifies extreme or inconsistent emotional intelligence scores using advanced statistical methods.
+
+**Supported Methods:**
+- **Z-Score**: Identifies scores deviating significantly from mean
+- **IQR (Interquartile Range)**: Robust method for skewed distributions
+- **Modified Z-Score**: Uses median/MAD for robustness
+- **MAD (Median Absolute Deviation)**: Resistant to extreme values
+- **Ensemble**: Consensus-based approach combining multiple methods
+
+### Command Line Usage
+
+```bash
+# Analyze user scores
+python scripts/outlier_analysis.py --user john_doe --method ensemble
+
+# Analyze age group
+python scripts/outlier_analysis.py --age-group "18-25" --method iqr
+
+# Global analysis
+python scripts/outlier_analysis.py --global --method zscore
+
+# Check inconsistency patterns
+python scripts/outlier_analysis.py --inconsistency john_doe --days 30
+
+# Get statistics
+python scripts/outlier_analysis.py --stats --age-group "26-35"
+
+# Output as JSON
+python scripts/outlier_analysis.py --user john_doe --format json
+```
+
+### Python API
+
+```python
+from app.db import get_session
+from app.outlier_detection import OutlierDetector
+
+detector = OutlierDetector()
+session = get_session()
+
+# Detect outliers for user
+result = detector.detect_outliers_for_user(session, "john_doe", method="ensemble")
+
+# Detect by age group
+result = detector.detect_outliers_by_age_group(session, "18-25", method="iqr")
+
+# Global analysis
+result = detector.detect_outliers_global(session, method="zscore")
+
+# Inconsistency analysis
+result = detector.detect_inconsistency_patterns(session, "john_doe", time_window_days=30)
+```
+
 ---
 
 ## 🧱 Design Notes
@@ -219,7 +460,8 @@ Tests use temporary SQLite databases and do not affect production data.
 - Database schemas are created and migrated safely at runtime
 - Question loading is idempotent and separated from application logic
 - Core logic is decoupled from the GUI to enable testing
-- Refactor preserves original application behavior while improving structure
+- Outlier detection uses NumPy for efficient statistical computations
+- All methods are fully tested with comprehensive edge case coverage
 
 ---
 

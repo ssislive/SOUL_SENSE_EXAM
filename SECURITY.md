@@ -1,5 +1,18 @@
 # Security Policy
 
+## Authentication & Password Security
+
+### Password Hashing
+- **Algorithm:** bcrypt (configurable rounds: 12)
+- **Salt:** Automatically generated per password
+- **Cost Factor:** 12 rounds (intentionally slow to prevent brute-force attacks)
+- **Standard Compliance:** OWASP recommended
+
+The SOUL_SENSE_EXAM project uses bcrypt for password hashing instead of SHA-256 to provide industry-standard security:
+- Automatic salt generation prevents rainbow table attacks
+- Configurable work factor allows future security adjustments
+- Built-in protection against GPU-accelerated brute-force attacks
+
 ## Reporting Security Issues
 
 The SOUL_SENSE_EXAM project takes security seriously. We appreciate the efforts of security researchers and users who help us keep the project safe.

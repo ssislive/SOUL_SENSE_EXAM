@@ -1,4 +1,5 @@
 import pytest
+import bcrypt
 from app.auth import AuthManager
 
 class TestAuth:
@@ -10,6 +11,27 @@ class TestAuth:
         will use the temp DB.
         """
         self.auth_manager = AuthManager()
+    
+    def test_password_hashing_with_bcrypt(self):
+        """Test that passwords are properly hashed with bcrypt."""
+        password = "test_password_123"
+        hashed = self.auth_manager.hash_password(password)
+        
+        # Hash should not be the plaintext password
+        assert hashed != password
+        # Hash should be a valid bcrypt hash
+        assert hashed.startswith('$2')  # bcrypt hashes start with $2
+    
+    def test_password_verification(self):
+        """Test password verification against bcrypt hash."""
+        password = "test_password_123"
+        hashed = self.auth_manager.hash_password(password)
+        
+        # Correct password should verify
+        assert self.auth_manager.verify_password(password, hashed) == True
+        
+        # Wrong password should not verify
+        assert self.auth_manager.verify_password("wrong_password", hashed) == False
     
     def test_user_registration(self):
         # Test successful registration

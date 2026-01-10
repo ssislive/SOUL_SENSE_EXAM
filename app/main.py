@@ -1,24 +1,108 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox, simpledialog
 import logging
-import sys
+import threading
+import time
 from datetime import datetime
 import json
+import webbrowser
 import os
-import random
-from bias_checker import SimpleBiasChecker
-from app.db import get_connection
+import sys
+import random # For random tips
 
+# NLTK (optional) - import defensively so app can run without it
+try:
+    import nltk
+    from nltk.sentiment import SentimentIntensityAnalyzer
+    SENTIMENT_AVAILABLE = True
+except Exception:
+    SENTIMENT_AVAILABLE = False
+    SentimentIntensityAnalyzer = None
+import traceback # Keep this, it was in the original and not explicitly removed
+
+from app.db import get_session, get_connection
+from app.config import APP_CONFIG
+from app.models import User, Score, Response, Question
+from app.exceptions import DatabaseError, ValidationError, AuthenticationError, APIConnectionError, SoulSenseError
+from app.logger import setup_logging
+from app.data_cleaning import DataCleaner
+from app.utils import load_settings, save_settings, compute_age_group
 from app.questions import load_questions
-from app.utils import compute_age_group
+
+# Try importing optional features
+try:
+    from journal_feature import JournalFeature
+except ImportError:
+    logging.warning("Could not import JournalFeature")
+    JournalFeature = None
+
+try:
+    from ml_predictor import SoulSenseMLPredictor
+except ImportError:
+    logging.warning("Could not import SoulSenseMLPredictor")
+    SoulSenseMLPredictor = None
+
+try:
+    from analytics_dashboard import AnalyticsDashboard
+except ImportError:
+    logging.warning("Could not import AnalyticsDashboard")
+    AnalyticsDashboard = None
+
+# Ensure VADER lexicon is downloaded when NLTK is available
+if SENTIMENT_AVAILABLE:
+    try:
+        nltk.data.find('sentiment/vader_lexicon.zip')
+    except LookupError:
+        try:
+            nltk.download('vader_lexicon', quiet=True)
+        except Exception:
+            # If download fails, continue without sentiment functionality
+            SENTIMENT_AVAILABLE = False
+
+# ---------------- LOGGING SETUP ----------------
+setup_logging()
+
+def show_error(title, message, error_obj=None):
+    """
+    Display a friendly error message to the user and ensure it's logged.
+    """
+    if error_obj:
+        logging.error(f"{title}: {message} | Error: {error_obj}", exc_info=(type(error_obj), error_obj, error_obj.__traceback__) if hasattr(error_obj, '__traceback__') else True)
+    else:
+        logging.error(f"{title}: {message}")
+    
+    # Show UI dialog
+    try:
+        messagebox.showerror(title, f"{message}\n\nDetails have been logged." if error_obj else message)
+    except Exception:
+        # Fallback if UI fails
+        print(f"CRITICAL UI ERROR: {title} - {message}", file=sys.stderr)
+
+def global_exception_handler(self, exc, val, tb):
+    """
+    Global exception handler for Tkinter callbacks.
+    Catches unhandled errors, logs them, and shows a friendly dialog.
+    """
+    logging.critical("Unhandled exception in GUI", exc_info=(exc, val, tb))
+    
+    title = "Unexpected Error"
+    message = "An unexpected error occurred."
+    
+    # Handle custom exceptions nicely
+    if isinstance(val, SoulSenseError):
+        title = "Application Error"
+        message = str(val)
+    elif isinstance(val, tk.TclError):
+        title = "Interface Error"
+        message = "A graphical interface error occurred."
+    
+    show_error(title, message)
+
+# Hook into Tkinter's exception reporting
+tk.Tk.report_callback_exception = global_exception_handler
 
 # ---------------- SETTINGS ----------------
-SETTINGS_FILE = "settings.json"
-DEFAULT_SETTINGS = {
-    "question_count": 10,
-    "theme": "light",
-    "sound_effects": True
-}
+# Imported from app.utils
 
 # ---------------- BENCHMARK DATA ----------------
 # Based on EQ test norms (simulated data for demonstration)
@@ -54,30 +138,7 @@ BENCHMARK_DATA = {
     }
 }
 
-def load_settings():
-    """Load user settings from file or use defaults"""
-    if os.path.exists(SETTINGS_FILE):
-        try:
-            with open(SETTINGS_FILE, 'r') as f:
-                settings = json.load(f)
-                # Ensure all default keys exist
-                for key in DEFAULT_SETTINGS:
-                    if key not in settings:
-                        settings[key] = DEFAULT_SETTINGS[key]
-                return settings
-        except Exception:
-            logging.error("Failed to load settings", exc_info=True)
-    return DEFAULT_SETTINGS.copy()
 
-def save_settings(settings):
-    """Save user settings to file"""
-    try:
-        with open(SETTINGS_FILE, 'w') as f:
-            json.dump(settings, f, indent=2)
-        return True
-    except Exception:
-        logging.error("Failed to save settings", exc_info=True)
-        return False
 
 # ---------------- LOGGING ----------------
 logging.basicConfig(
@@ -106,17 +167,17 @@ conn.commit()
 
 # ---------------- LOAD QUESTIONS FROM DB ----------------
 try:
-    rows = load_questions()  # [(id, text)]
-    all_questions = [q[1] for q in rows]   # preserve text only
+    rows = load_questions()  # [(id, text, tooltip, min_age, max_age)]
+    # Store (text, tooltip) tuple
+    all_questions = [(q[1], q[2]) for q in rows]
     
     if not all_questions:
-        raise RuntimeError("Question bank empty")
+        raise ResourceError("Question bank empty: No questions found in database.")
 
     logging.info("Loaded %s total questions from DB", len(all_questions))
 
-except Exception:
-    logging.critical("Failed to load questions from DB", exc_info=True)
-    messagebox.showerror("Fatal Error", "Question bank could not be loaded.")
+except Exception as e:
+    show_error("Fatal Error", "Question bank could not be loaded.\nThe application cannot start.", e)
     sys.exit(1)
 
 # ---------------- GUI ----------------
@@ -126,6 +187,20 @@ class SoulSenseApp:
         self.root.title("Soul Sense EQ Test")
         self.root.geometry("650x550")  # Increased size for benchmarking
         
+        # Initialize ML Predictor
+
+        try:
+            self.ml_predictor = SoulSenseMLPredictor()
+            logging.info("ML Predictor initialized successfully")
+        except Exception as e:
+            logging.error(f"Failed to initialize ML Predictor: {e}")
+            self.ml_predictor = None
+
+        # Initialize Journal Feature
+        self.journal_feature = JournalFeature(self.root)
+
+
+
         # Load settings
         self.settings = load_settings()
         
@@ -191,6 +266,19 @@ class SoulSenseApp:
         self.age = None
         self.age_group = None
         self.profession = None
+        
+        # Initialize Sentiment Variables
+        self.sentiment_score = 0.0 
+        self.reflection_text = ""
+        
+        # Initialize Sentiment Analyzer
+        try:
+            self.sia = SentimentIntensityAnalyzer()
+            logging.info("SentimentIntensityAnalyzer initialized successfully")
+        except Exception as e:
+            logging.error(f"Failed to initialize SentimentIntensityAnalyzer: {e}")
+            self.sia = None
+
         self.current_question = 0
         self.responses = []
         self.current_score = 0
@@ -294,6 +382,8 @@ class SoulSenseApp:
             return f"#{r:02x}{g:02x}{b:02x}"
         return color
 
+
+
     def create_welcome_screen(self):
         """Create initial welcome screen with settings option"""
         self.clear_screen()
@@ -353,6 +443,32 @@ class SoulSenseApp:
         )
         start_btn.pack(pady=5)
         
+        # Journal Button
+        journal_btn = self.create_widget(
+            tk.Button,
+            button_frame,
+            text="📖 Daily Journal",
+            command=self.open_journal_flow,
+            font=("Arial", 12),
+            width=15,
+            bg="#FFB74D", # Orange accent
+            fg="black"
+        )
+        journal_btn.pack(pady=5)
+
+        # Dashboard Button (NEW)
+        dashboard_btn = self.create_widget(
+            tk.Button,
+            button_frame,
+            text="📊 Dashboard",
+            command=self.open_dashboard_flow,
+            font=("Arial", 12),
+            width=15,
+            bg="#29B6F6", # Light Blue accent
+            fg="black"
+        )
+        dashboard_btn.pack(pady=5)
+        
         # View History button
         history_btn = self.create_widget(
             tk.Button,
@@ -383,6 +499,32 @@ class SoulSenseApp:
             width=15
         )
         exit_btn.pack(pady=5)
+
+    def open_journal_flow(self):
+        """Handle journal access, prompting for name if needed"""
+        if not self.username:
+            name = simpledialog.askstring("Journal Access", "Please enter your name to access your journal:", parent=self.root)
+            if name and name.strip():
+                self.username = name.strip()
+            else:
+                return
+        
+        self.journal_feature.open_journal_window(self.username)
+
+    def open_dashboard_flow(self):
+        """Handle dashboard access, prompting for name if needed"""
+        if not self.username:
+            name = simpledialog.askstring("Dashboard Access", "Please enter your name to view your dashboard:", parent=self.root)
+            if name and name.strip():
+                self.username = name.strip()
+            else:
+                return
+        
+        if AnalyticsDashboard:
+            dashboard = AnalyticsDashboard(self.root, self.username)
+            dashboard.open_dashboard()
+        else:
+            messagebox.showerror("Error", "Dashboard component could not be loaded")
 
     def run_bias_check(self):
         """Quick bias check after test completion"""
@@ -664,15 +806,18 @@ class SoulSenseApp:
             return True, age, None
         except ValueError:
             return False, None, "Age must be numeric."
-
-            return True, age, None
-        except ValueError:
-            return False, None, "Age must be numeric."
     
     def _enter_start(self, event):
         self.start_test()
 
     def start_test(self):
+        # Reset test state completely
+        self.current_question = 0
+        self.responses = []
+        self.current_score = 0
+        self.sentiment_score = 0.0
+        self.reflection_text = ""
+        
         self.username = self.name_entry.get().strip()
         age_str = self.age_entry.get().strip()
         self.profession = self.profession_var.get() if self.profession_var.get() else None
@@ -704,8 +849,15 @@ class SoulSenseApp:
             self.finish_test()
             return
 
-        q = self.questions[self.current_question]
-        
+        q_data = self.questions[self.current_question]
+        # Handle both tuple (new format) and string (legacy safety)
+        if isinstance(q_data, tuple):
+            q_text = q_data[0]
+            q_tooltip = q_data[1]
+        else:
+            q_text = q_data
+            q_tooltip = None
+
         # Question counter
         self.create_widget(
             tk.Label,
@@ -720,11 +872,14 @@ class SoulSenseApp:
         self.create_widget(
             tk.Label,
             q_frame,
-            text=f"Q{self.current_question + 1}: {q}",
+            text=f"Q{self.current_question + 1}: {q_text}",
             wraplength=400,
             font=("Arial", 12)
         ).pack(side="left")
         
+        # Tooltip content
+        tooltip_text = q_tooltip if q_tooltip else "Select the option that best describes you.\nThere are no right or wrong answers."
+
         # Tooltip Icon
         info_btn = tk.Button(
             q_frame,
@@ -736,13 +891,17 @@ class SoulSenseApp:
             command=lambda: None # Placeholder, real action via bind
         )
         info_btn.pack(side="left", padx=5)
-        info_btn.bind("<Button-1>", lambda e: self.toggle_tooltip(e, "Select the option that best describes you.\nThere are no right or wrong answers."))
-        info_btn.bind("<Return>", lambda e: self.toggle_tooltip(e, "Select the option that best describes you.\nThere are no right or wrong answers."))
+        info_btn.bind("<Button-1>", lambda e: self.toggle_tooltip(e, tooltip_text))
+        info_btn.bind("<Return>", lambda e: self.toggle_tooltip(e, tooltip_text))
 
         # Bind Enter to Next
         self.root.bind("<Return>", lambda e: self.save_answer())
 
         self.answer_var = tk.IntVar()
+        
+        # Set the default value if we have a previous response for this question
+        if self.current_question < len(self.responses):
+            self.answer_var.set(self.responses[self.current_question])
 
         for val, txt in enumerate(["Never", "Sometimes", "Often", "Always"], 1):
             self.create_widget(
@@ -757,26 +916,44 @@ class SoulSenseApp:
         button_frame = self.create_widget(tk.Frame, self.root)
         button_frame.pack(pady=15)
         
+        # Always show Previous button except on first question
         if self.current_question > 0:
             self.create_widget(
                 tk.Button,
                 button_frame,
-                text="Previous",
-                command=self.previous_question
+                text="← Previous",
+                command=self.previous_question,
+                font=("Arial", 11)
             ).pack(side="left", padx=5)
-
+        
+        # Show different text for last question
+        if self.current_question == len(self.questions) - 1:
+            next_text = "Finish Test"
+        else:
+            next_text = "Next →"
+        
         self.create_widget(
             tk.Button,
             button_frame,
-            text="Next",
-            command=self.save_answer
+            text=next_text,
+            command=self.save_answer,
+            font=("Arial", 11)
         ).pack(side="left", padx=5)
 
     def previous_question(self):
+        # Save current answer before moving back
+        current_answer = self.answer_var.get()
+        if current_answer > 0:  # Only save if an answer was selected
+            if self.current_question < len(self.responses):
+                # Update existing response
+                self.responses[self.current_question] = current_answer
+            else:
+                # Add new response if it doesn't exist
+                self.responses.append(current_answer)
+        
+        # Move to previous question
         if self.current_question > 0:
             self.current_question -= 1
-            if self.responses:
-                self.responses.pop()
             self.show_question()
 
     def save_answer(self):
@@ -785,7 +962,15 @@ class SoulSenseApp:
             messagebox.showwarning("Input Error", "Please select an answer.")
             return
 
-        self.responses.append(ans)
+        # Save or update the response
+        if self.current_question < len(self.responses):
+            self.responses[self.current_question] = ans
+        else:
+            self.responses.append(ans)
+        
+        # Save individual response
+        conn = get_connection()
+        cursor = conn.cursor()
 
         qid = self.current_question + 1
         ts = datetime.utcnow().isoformat()
@@ -804,26 +989,92 @@ class SoulSenseApp:
             logging.error("Failed to store response", exc_info=True)
 
         self.current_question += 1
-        self.show_question()
+        
+        if self.current_question >= len(self.questions):
+            self.show_reflection_screen()
+        else:
+            self.show_question()
 
     def finish_test(self):
         self.current_score = sum(self.responses)
         self.current_max_score = len(self.responses) * 4
         self.current_percentage = (self.current_score / self.current_max_score) * 100 if self.current_max_score > 0 else 0
-
+        
+        conn = get_connection() # Get clean session
+        cursor = conn.cursor() # Get cursor explicitly
+        
         try:
+            # Save to Database with new columns
             cursor.execute(
-                "INSERT INTO scores (username, age, total_score, timestamp) VALUES (?, ?, ?, ?)",
-                (self.username, self.age, self.current_score, datetime.utcnow().isoformat())
+                "INSERT INTO scores (username, age, total_score, sentiment_score, reflection_text, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+                (self.username, self.age, self.current_score, self.sentiment_score, self.reflection_text, datetime.utcnow().isoformat())
             )
             conn.commit()
         except Exception:
             logging.error("Failed to store final score", exc_info=True)
 
+
         # Run bias check
-        self.run_bias_check()
+        # self.run_bias_check()  # TODO: Implement bias check
         
         self.show_visual_results()
+
+    def show_reflection_screen(self):
+        """Show the open-ended reflection question"""
+        self.clear_screen()
+        
+        # Header
+        self.create_widget(
+            tk.Label, 
+            self.root, 
+            text="Final Reflection", 
+            font=("Arial", 24, "bold")
+        ).pack(pady=20)
+        
+        self.create_widget(
+            tk.Label, 
+            self.root, 
+            text="Describe a recent situation where you felt challenged emotionally.\nHow did you handle it?", 
+            font=("Arial", 14),
+            wraplength=600
+        ).pack(pady=10)
+        
+        # Text Area
+        self.reflection_entry = tk.Text(self.root, height=10, width=60, font=("Arial", 12))
+        self.reflection_entry.pack(pady=20, padx=20)
+        
+        # Submit Button
+        self.create_widget(
+            tk.Button,
+            self.root,
+            text="Submit & See Results",
+            command=self.submit_reflection,
+            font=("Arial", 14, "bold")
+        ).pack(pady=20)
+        
+    def submit_reflection(self):
+        """Analyze reflection and finish test"""
+        text = self.reflection_entry.get("1.0", tk.END).strip()
+        
+        if not text:
+            if not messagebox.askyesno("Skip?", "You haven't written anything. Do you want to skip?"):
+                return
+            self.sentiment_score = 0.0
+            self.reflection_text = ""
+        else:
+            self.reflection_text = text
+            # Analyze sentiment
+            try:
+                scores = self.sia.polarity_scores(text)
+                # Convert compound (-1 to 1) to -100 to 100
+                self.sentiment_score = scores['compound'] * 100
+            except Exception as e:
+                logging.error(f"Error analyzing sentiment: {e}")
+                self.sentiment_score = 0.0
+        
+        self.finish_test()
+
+
 
     # ---------- BENCHMARKING FUNCTIONS ----------
     def calculate_percentile(self, score, avg_score, std_dev):
@@ -1102,6 +1353,61 @@ class SoulSenseApp:
         )
         percentage_label.pack()
         
+        # Sentiment Score display (if available)
+        if hasattr(self, 'sentiment_score') and self.sentiment_score is not None:
+            sentiment_frame = self.create_widget(tk.Frame, score_display_frame)
+            sentiment_frame.pack(pady=10)
+            
+            # Sentiment label
+            self.create_widget(
+                tk.Label,
+                sentiment_frame,
+                text="Emotional Sentiment:",
+                font=("Arial", 12, "bold")
+            ).pack()
+            
+            # Sentiment score with color coding
+            if self.sentiment_score < -20:
+                sentiment_color = "#D32F2F"  # Red for negative
+                sentiment_label_text = "Negative"
+            elif self.sentiment_score > 20:
+                sentiment_color = "#388E3C"  # Green for positive
+                sentiment_label_text = "Positive"
+            else:
+                sentiment_color = "#FBC02D"  # Yellow for neutral
+                sentiment_label_text = "Neutral"
+            
+            sentiment_score_label = self.create_widget(
+                tk.Label,
+                sentiment_frame,
+                text=f"{self.sentiment_score:+.1f} ({sentiment_label_text})",
+                font=("Arial", 18, "bold"),
+                fg=sentiment_color
+            )
+            sentiment_score_label.pack()
+            
+            # Sentiment explanation
+            sentiment_desc = ""
+            if self.sentiment_score < -60:
+                sentiment_desc = "Your reflection shows significant distress"
+            elif self.sentiment_score < -20:
+                sentiment_desc = "Your reflection indicates some negative emotion"
+            elif self.sentiment_score > 60:
+                sentiment_desc = "Your reflection shows strong positive emotion"
+            elif self.sentiment_score > 20:
+                sentiment_desc = "Your reflection indicates positive feelings"
+            else:
+                sentiment_desc = "Your reflection shows balanced emotions"
+            
+            self.create_widget(
+                tk.Label,
+                sentiment_frame,
+                text=sentiment_desc,
+                font=("Arial", 10),
+                fg=self.colors["fg"]
+            ).pack()
+        
+        
         # Progress bar visualization
         progress_frame = self.create_widget(tk.Frame, summary_frame)
         progress_frame.pack(pady=20)
@@ -1156,6 +1462,57 @@ class SoulSenseApp:
                 font=("Arial", 8)
             )
             marker_label.pack(side="left", expand=True)
+        
+        # --- SENTIMENT ANALYSIS DISPLAY ---
+        sentiment_frame = self.create_widget(tk.Frame, summary_frame)
+        sentiment_frame.pack(fill="x", pady=20, padx=20)
+        
+        self.create_widget(
+            tk.Label,
+            sentiment_frame,
+            text="Emotional Sentiment:",
+            font=("Arial", 14, "bold")
+        ).pack(anchor="w")
+        
+        # Color coding
+        if self.sentiment_score > 20:
+            s_color = "green"
+            s_text = "Positive Outlook"
+        elif self.sentiment_score < -20:
+            s_color = "red"
+            s_text = "Negative Emotion"
+        else:
+            s_color = "#FFC107" # Amber
+            s_text = "Neutral/Balanced"
+            
+        self.create_widget(
+            tk.Label,
+            sentiment_frame,
+            text=f"{self.sentiment_score:+.1f} ({s_text})",
+            font=("Arial", 18, "bold"),
+            fg=s_color
+        ).pack(anchor="w", pady=5)
+        
+        # Description
+        if self.sentiment_score < -60:
+            desc = "Your reflection shows significant distress."
+        elif self.sentiment_score < -20:
+            desc = "Your reflection indicates some negative emotion."
+        elif self.sentiment_score > 60:
+            desc = "Your reflection shows strong positive emotion!"
+        elif self.sentiment_score > 20:
+            desc = "Your reflection indicates positive feelings."
+        else:
+            desc = "Your reflection shows balanced emotions."
+            
+        self.create_widget(
+            tk.Label,
+            sentiment_frame,
+            text=desc,
+            font=("Arial", 11, "italic"),
+            wraplength=400
+        ).pack(anchor="w")
+        # ----------------------------------
         
         # BENCHMARK SECTION
         benchmark_frame = self.create_widget(tk.Frame, scrollable_frame)
@@ -1272,6 +1629,36 @@ class SoulSenseApp:
         button_frame = self.create_widget(tk.Frame, scrollable_frame)
         button_frame.pack(pady=20, padx=20)
         
+        button_frame.pack(pady=20, padx=20)
+        
+        # Grid Layout for Buttons
+        # Row 0: AI Analysis (Center, Prominent)
+        if self.ml_predictor:
+            btn_ai = tk.Button(
+                button_frame,
+                text="🤖 AI Analysis",
+                command=self.show_ml_analysis,
+                font=("Segoe UI", 12, "bold"),
+                bg="#1976D2",
+                fg="white",
+                activebackground="#1565C0",
+                activeforeground="white",
+                relief="flat",
+                cursor="hand2",
+                width=20,
+                pady=8
+            )
+            btn_ai.grid(row=0, column=0, columnspan=2, pady=(0, 15))
+            
+            def on_enter(e): btn_ai['bg'] = "#2196F3"
+            def on_leave(e): btn_ai['bg'] = "#1976D2"
+            btn_ai.bind("<Enter>", on_enter)
+            btn_ai.bind("<Leave>", on_leave)
+
+        # Row 1: Comparison & History
+        row1_frame = tk.Frame(button_frame)
+        row1_frame.grid(row=1, column=0, columnspan=2, pady=5)
+        
         # Check if user has previous attempts
         cursor.execute(
             "SELECT COUNT(*) FROM scores WHERE username = ?",
@@ -1279,46 +1666,237 @@ class SoulSenseApp:
         )
         previous_count = cursor.fetchone()[0]
         
-        if previous_count > 1:  # Current test + at least one previous
+        if previous_count > 1:
             self.create_widget(
                 tk.Button,
-                button_frame,
-                text="Compare with Previous Tests",
+                row1_frame,
+                text="Compare Previous",
                 command=self.show_comparison_screen,
-                font=("Arial", 12),
-                width=25
-            ).pack(side="left", padx=10)
+                font=("Arial", 11),
+                width=16
+            ).pack(side="left", padx=5)
         
         self.create_widget(
             tk.Button,
-            button_frame,
+            row1_frame,
             text="View History",
             command=self.show_history_screen,
-            font=("Arial", 12),
-            width=15
-        ).pack(side="left", padx=10)
+            font=("Arial", 11),
+            width=16
+        ).pack(side="left", padx=5)
         
+        # Row 2: Standard Actions
+        row2_frame = tk.Frame(button_frame)
+        row2_frame.grid(row=2, column=0, columnspan=2, pady=5)
+
         self.create_widget(
             tk.Button,
-            button_frame,
-            text="Take Another Test",
+            row2_frame,
+            text="Take Another",
             command=self.reset_test,
-            font=("Arial", 12),
-            width=15
-        ).pack(side="left", padx=10)
+            font=("Arial", 11),
+            width=16
+        ).pack(side="left", padx=5)
         
         self.create_widget(
             tk.Button,
-            button_frame,
+            row2_frame,
             text="Main Menu",
             command=self.create_welcome_screen,
-            font=("Arial", 12),
-            width=15
-        ).pack(side="left", padx=10)
+            font=("Arial", 11),
+            width=16
+        ).pack(side="left", padx=5)
         
-        # Pack canvas and scrollbar
+        # Pack canvas and scrollbar (unchanged)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+    def show_ml_analysis(self):
+        """Show AI-powered analysis in a popup window"""
+        if not self.ml_predictor:
+            messagebox.showerror("Error", "AI Model not loaded.")
+            return
+            
+        try:
+            # 1. Get Prediction
+            result = self.ml_predictor.predict_with_explanation(
+                self.responses,
+                self.age,
+                self.current_score,
+                sentiment_score=self.sentiment_score
+            )
+            
+            # 2. Create Layout
+            popup = tk.Toplevel(self.root)
+            popup.title("🤖 SoulSense AI Analysis")
+            popup.geometry("650x750")
+            popup.configure(bg="#F5F5F5")
+
+            # Main Scrollable Frame
+            canvas = tk.Canvas(popup, bg="#F5F5F5")
+            scrollbar = tk.Scrollbar(popup, orient="vertical", command=canvas.yview)
+            scrollable_frame = tk.Frame(canvas, bg="#F5F5F5")
+
+            scrollable_frame.bind(
+                "<Configure>",
+                lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            )
+
+            canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            # --- CARD 1: OVERVIEW ---
+            risk_color = "#D32F2F" if result['prediction'] == 2 else "#FBC02D" if result['prediction'] == 1 else "#388E3C"
+            bg_color = "#FFEBEE" if result['prediction'] == 2 else "#FFFDE7" if result['prediction'] == 1 else "#E8F5E9"
+            
+            card1 = tk.Frame(scrollable_frame, bg="white", bd=1, relief="solid")
+            card1.pack(fill="x", padx=20, pady=10)
+            
+            # Header
+            header_frame = tk.Frame(card1, bg=risk_color, height=80)
+            header_frame.pack(fill="x")
+            
+            tk.Label(
+                header_frame, 
+                text=result['prediction_label'].upper(), 
+                font=("Arial", 18, "bold"),
+                bg=risk_color,
+                fg="white"
+            ).pack(pady=10)
+            
+            tk.Label(
+                header_frame,
+                text=f"Confidence: {result['confidence']:.1%}",
+                font=("Arial", 12),
+                bg=risk_color,
+                fg="white"
+            ).pack(pady=(0, 10))
+
+            tk.Label(
+                card1, 
+                text="Based on your inputs, the AI model suggests:", 
+                font=("Arial", 11, "italic"),
+                bg="white",
+                fg="#555"
+            ).pack(pady=15)
+
+            # --- CARD 2: ACTION PLAN ---
+            tk.Label(scrollable_frame, text="✅ RECOMMENDED ACTIONS", font=("Arial", 14, "bold"), bg="#F5F5F5", fg="#333").pack(anchor="w", padx=25, pady=(15,5))
+            
+            card2 = tk.Frame(scrollable_frame, bg="white", bd=0, highlightbackground="#ddd", highlightthickness=1)
+            card2.pack(fill="x", padx=20)
+
+            if 'recommendations' in result and result['recommendations']:
+                for tip in result['recommendations']:
+                    row = tk.Frame(card2, bg="white")
+                    row.pack(fill="x", pady=10, padx=15)
+                    
+                    tk.Label(row, text="🔹", font=("Arial", 12), bg="white", fg=risk_color).pack(side="left", anchor="n")
+                    tk.Label(
+                        row, 
+                        text=tip, 
+                        font=("Arial", 11), 
+                        bg="white", 
+                        fg="#333", 
+                        wraplength=500, 
+                        justify="left"
+                    ).pack(side="left", padx=10)
+            else:
+                tk.Label(card2, text="No specific recommendations available.", bg="white").pack(pady=20)
+
+            # --- CARD 3: TOP FACTORS ---
+            tk.Label(scrollable_frame, text="🔍 INFLUENCING FACTORS", font=("Arial", 14, "bold"), bg="#F5F5F5", fg="#333").pack(anchor="w", padx=25, pady=(20,5))
+            
+            card3 = tk.Frame(scrollable_frame, bg="white", bd=0, highlightbackground="#ddd", highlightthickness=1)
+            card3.pack(fill="x", padx=20, pady=10)
+
+            card3.pack(fill="x", padx=20, pady=10)
+
+            # Filter out non-5-point scale features for clean visualization
+            visual_features = {k: v for k, v in result['features'].items() 
+                             if k not in ['total_score', 'age', 'average_score']}
+            
+            sorted_features = sorted(visual_features.items(), key=lambda x: result['feature_importance'].get(x[0], 0), reverse=True)[:3]
+            
+            for feature, value in sorted_features:
+                imp = result['feature_importance'].get(feature, 0)
+                f_name = feature.replace('_', ' ').title()
+                
+                f_row = tk.Frame(card3, bg="white")
+                f_row.pack(fill="x", pady=8, padx=15)
+                
+                # Label Row (Name + Value)
+                label_row = tk.Frame(f_row, bg="white")
+                label_row.pack(fill="x", pady=(0, 2))
+                
+                tk.Label(
+                    label_row, 
+                    text=f_name, 
+                    font=("Segoe UI", 11, "bold"), 
+                    bg="white", 
+                    fg="#444"
+                ).pack(side="left")
+                
+                # Format Score
+                if feature == 'sentiment_score':
+                    score_text = f"{value:+.1f}"
+                elif feature == 'total_score':
+                    score_text = f"{value/25*100:.0f}/100"
+                else:
+                    # Assume 5-point scale
+                    score_text = f"{value*20:.0f}/100"
+                
+                tk.Label(
+                    label_row, 
+                    text=score_text, 
+                    font=("Segoe UI", 11, "bold"), 
+                    bg="white", 
+                    fg="#666"
+                ).pack(side="right")
+                
+                # Progress Bar
+                bar_bg = tk.Frame(f_row, bg="#F0F2F5", height=12, width=400)
+                bar_bg.pack(fill="x", pady=2)
+                bar_bg.pack_propagate(False)
+                
+                fill_width = int(520 * imp * 3.5) # Scale to available width
+                # Note: fill_width is relative to parent, simplified here as frame width isn't fixed yet
+                # We use a fractional width approach or fixed max
+                
+                tk.Frame(
+                    bar_bg, 
+                    bg="#4CAF50" if imp < 0.1 else "#2196F3" if imp < 0.3 else "#FF9800", # Color by impact
+                    height=12, 
+                    width=fill_width
+                ).pack(side="left")
+
+            # Close Button
+            btn_close = tk.Button(
+                scrollable_frame,
+                text="Close Analysis",
+                command=popup.destroy,
+                font=("Segoe UI", 12, "bold"),
+                bg="#546E7A", # Blue Grey
+                fg="white", 
+                activebackground="#455A64",
+                activeforeground="white",
+                relief="flat",
+                cursor="hand2",
+                width=20,
+                pady=10
+            )
+            btn_close.pack(pady=30)
+            
+            # Hover for close
+            btn_close.bind("<Enter>", lambda e: btn_close.configure(bg="#455A64"))
+            btn_close.bind("<Leave>", lambda e: btn_close.configure(bg="#546E7A"))
+            
+        except Exception as e:
+            logging.error("AI Analysis failed", exc_info=True)
+            messagebox.showerror("Analysis Error", f"Could not generate AI report.\n{e}")
 
     def show_history_screen(self):
         """Show history of all tests for the current user"""
@@ -1879,13 +2457,12 @@ class SplashScreen:
     def close_after_delay(self, delay, callback):
         self.root.after(delay, callback)
 
-# ---------------- MAIN ----------------
 if __name__ == "__main__":
     splash_root = tk.Tk()
     splash = SplashScreen(splash_root)
-    
+
     def launch_main_app():
-        splash.root.destroy()
+        splash_root.destroy()
         root = tk.Tk()
         app = SoulSenseApp(root)
         root.protocol("WM_DELETE_WINDOW", app.force_exit)
