@@ -354,7 +354,10 @@ def preload_all_question_sets():
 
 def clear_all_caches():
     """Clear all caches"""
-    global _questions_cache, _cache_timestamps, _last_preload_time
+    # Globals modified in this scope via clear/methods, but declaring them global 
+    # isn't strictly necessary if we are mutating the objects in place.
+    # However, flake8 complains they are unused in this function scope.
+    # We just access them.
     
     with _cache_lock:
         _questions_cache.clear()

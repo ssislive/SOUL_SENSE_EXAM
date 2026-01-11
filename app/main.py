@@ -29,11 +29,17 @@ from app.db import get_session, get_connection
 from app.config import APP_CONFIG
 from app.constants import BENCHMARK_DATA
 from app.models import User, Score, Response, Question
-from app.exceptions import DatabaseError, ValidationError, AuthenticationError, APIConnectionError, SoulSenseError
+from app.exceptions import DatabaseError, ValidationError, AuthenticationError, APIConnectionError, SoulSenseError, ResourceError
 from app.logger import setup_logging
 from app.analysis.data_cleaning import DataCleaner
 from app.utils import load_settings, save_settings, compute_age_group
 from app.questions import load_questions
+
+# Try importing bias checker (optional)
+try:
+    from scripts.check_gender_bias import SimpleBiasChecker
+except ImportError:
+    SimpleBiasChecker = None
 
 # Try importing optional features
 try:
@@ -445,6 +451,9 @@ class SoulSenseApp:
 
     def run_bias_check(self):
         """Quick bias check after test completion"""
+        if not SimpleBiasChecker:
+            return
+
         try:
             checker = SimpleBiasChecker()
             bias_result = checker.check_age_bias()

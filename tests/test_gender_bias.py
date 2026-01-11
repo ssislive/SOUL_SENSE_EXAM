@@ -18,5 +18,6 @@ def test_no_gender_bias_in_codebase():
         for filepath, file_issues in issues.items():
             error_msg += f"\nFile: {filepath}\n"
             for line_num, term, content in file_issues:
-                error_msg += f"  Line {line_num}: Found '{term.replace(r'\\b', '')}' -> \"{content}\"\n"
+                clean_term = term.replace(r'\\b', '')
+                error_msg += f"  Line {line_num}: Found '{clean_term}' -> \"{content}\"\n"
         pytest.fail(error_msg)

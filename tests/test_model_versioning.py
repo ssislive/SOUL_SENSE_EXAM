@@ -106,7 +106,6 @@ class TestModelRegistry:
     def mock_model(self):
         """Create a mock model for testing"""
         return PickleableMockModel()
-        return model
     
     def test_create_registry(self, temp_registry):
         """Test registry creation"""

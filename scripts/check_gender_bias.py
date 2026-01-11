@@ -95,7 +95,8 @@ def main():
         for filepath, file_issues in issues.items():
             print(f"\nFile: {filepath}")
             for line_num, term, content in file_issues:
-                print(f"  Line {line_num}: Found '{term.replace(r'\b', '').replace(r'\b', '')}' -> \"{content}\"")
+                clean_term = term.replace(r'\b', '')
+                print(f"  Line {line_num}: Found '{clean_term}' -> \"{content}\"")
         print("\n\033[91mFAILURE: Gendered terms detected. Please review and replace with neutral language.\033[0m")
         sys.exit(1)
     else:

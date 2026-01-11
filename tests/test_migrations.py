@@ -13,7 +13,9 @@ def temp_db_url():
     fd, path = tempfile.mkstemp(suffix='.db')
     os.close(fd)
     
-    url = f"sqlite:///{path.replace('\\', '/')}"
+    # Fix for f-string backslash syntax error in Python < 3.12
+    clean_path = path.replace('\\', '/')
+    url = f"sqlite:///{clean_path}"
     yield url
     
     # Cleanup
