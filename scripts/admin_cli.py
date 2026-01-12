@@ -9,6 +9,11 @@ from admin_interface import QuestionDatabase
 import getpass
 from tabulate import tabulate
 import numpy as np
+
+# Add parent directory to path to allow importing app
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from app.db import get_connection
 
 
@@ -224,10 +229,11 @@ class AdminCLI:
         else:
             print(f"\n✗ Username already exists\n")
 
-    def show_stats(self):
+    def show_stats(self, visual=False):
         """Show descriptive statistics for emotional scores"""
         print("\n" + "="*50)
-        print("  Descriptive Statistics (Admin Only)")
+        mode = "Visualizations" if visual else "Descriptive Statistics"
+        print(f"  {mode} (Admin Only)")
         print("="*50 + "\n")
         
         conn = get_connection()
@@ -246,35 +252,60 @@ class AdminCLI:
                 print("No scores available.\n")
                 return
 
-            def calculate_stats(data, name):
-                if not data:
-                    return []
-                arr = np.array(data)
-                return [
-                    [f"--- {name} ---", ""],
-                    ["Count", len(data)],
-                    ["Mean", f"{np.mean(arr):.2f}"],
-                    ["Median", f"{np.median(arr):.2f}"],
-                    ["Variance", f"{np.var(arr):.2f}"],
-                    ["Min", f"{np.min(arr):.2f}"],
-                    ["Max", f"{np.max(arr):.2f}"]
-                ]
-
-            data = []
-            if total_scores:
-                data.extend(calculate_stats(total_scores, "Total Score"))
-                data.append(["", ""]) # Spacer
+            if visual:
+                self._print_ascii_histogram("Total Score Distribution", total_scores, 0, 50, 10)
+                print("\n")
+                self._print_ascii_histogram("Sentiment Score Distribution", sentiment_scores, -100, 100, 20)
+                
+            else:
+                # Standard Table Stats
+                data = []
+                if total_scores:
+                    data.extend(self._calculate_stats(total_scores, "Total Score"))
+                    data.append(["", ""]) 
+                
+                if sentiment_scores:
+                    data.extend(self._calculate_stats(sentiment_scores, "Sentiment Score"))
+                
+                print(tabulate(data, headers=["Metric", "Value"], tablefmt="grid"))
             
-            if sentiment_scores:
-                data.extend(calculate_stats(sentiment_scores, "Sentiment Score"))
-            
-            print(tabulate(data, headers=["Metric", "Value"], tablefmt="grid"))
             print("\n")
             
         except Exception as e:
             print(f"✗ Error calculating statistics: {e}\n")
         finally:
             conn.close()
+
+    def _calculate_stats(self, data, name):
+        """Helper to calculate numeric stats"""
+        if not data:
+            return []
+        arr = np.array(data)
+        return [
+            [f"--- {name} ---", ""],
+            ["Count", len(data)],
+            ["Mean", f"{np.mean(arr):.2f}"],
+            ["Median", f"{np.median(arr):.2f}"],
+            ["min/max", f"{np.min(arr):.2f} / {np.max(arr):.2f}"]
+        ]
+
+    def _print_ascii_histogram(self, title, data, min_val, max_val, bins):
+        """Print a simple ASCII histogram"""
+        if not data:
+            return
+            
+        print(f"--- {title} ---")
+        hist, bin_edges = np.histogram(data, bins=bins, range=(min_val, max_val))
+        
+        max_count = max(hist) if len(hist) > 0 else 1
+        scale = 40.0 / max_count if max_count > 0 else 1
+        
+        for i in range(len(hist)):
+            count = hist[i]
+            bar_len = int(count * scale)
+            bar = "█" * bar_len
+            range_str = f"{int(bin_edges[i]):3d}-{int(bin_edges[i+1]):3d}"
+            print(f"{range_str} | {bar} ({count})")
 
 
 def main():
@@ -286,15 +317,20 @@ def main():
     parser.add_argument('--category', help='Filter by category (for list)')
     parser.add_argument('--inactive', action='store_true', help='Include inactive questions (for list)')
     parser.add_argument('--no-auth', action='store_true', help='Skip authentication (for create-admin only)')
+    parser.add_argument('--visual', action='store_true', help='Show visual charts (for stats)')
     
     args = parser.parse_args()
     
     cli = AdminCLI()
     
-    # Authentication (skip for create-admin if --no-auth is set)
-    if args.command == 'create-admin' and args.no_auth:
-        cli.create_admin_user()
-        return
+    # Authentication (skip for create-admin or stats if --no-auth is set)
+    if args.no_auth and (args.command == 'create-admin' or args.command == 'stats'):
+        if args.command == 'create-admin':
+            cli.create_admin_user()
+            return
+        elif args.command == 'stats':
+            cli.show_stats(args.visual)
+            return
     
     if not cli.authenticate():
         sys.exit(1)
@@ -331,7 +367,7 @@ def main():
         cli.create_admin_user()
 
     elif args.command == 'stats':
-        cli.show_stats()
+        cli.show_stats(args.visual)
         
 if __name__ == "__main__":
     main()
