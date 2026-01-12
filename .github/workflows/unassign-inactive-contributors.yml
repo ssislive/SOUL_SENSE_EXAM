@@ -1,0 +1,85 @@
+name: Unassign inactive contributors
+
+on:
+  schedule:
+    # Runs every 1 hour to check for inactivity
+    - cron: "0 * * * *"
+
+permissions:
+  issues: write
+
+jobs:
+  unassign-inactive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check and warn inactive contributors
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const warningPeriodHours = 12;
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: "open",
+                per_page: 100,
+              }
+            );
+
+            for (const issue of issues) {
+              // Skip PRs
+              if (issue.pull_request) continue;
+
+              // Skip issues with no assignees
+              if (!issue.assignees || issue.assignees.length === 0) continue;
+
+              const lastUpdated = new Date(issue.updated_at);
+              const diffHours = (now - lastUpdated) / (1000 * 60 * 60);
+
+              // Check if warning already sent
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+              });
+
+              const warningComment = comments.data.find(c => 
+                c.body.includes("⚠️ You have been inactive on this issue")
+              );
+
+              // First warning if diffHours >= warningPeriodHours / 2 and no warning yet
+              if (diffHours >= warningPeriodHours / 2 && !warningComment) {
+                const assignees = issue.assignees.map(a => `@${a.login}`).join(", ");
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `⚠️ You have been inactive on this issue for some time, ${assignees}. Please update within the next ${warningPeriodHours/2} hours or you may be unassigned.`
+                });
+                console.log(`Warning sent for issue #${issue.number}`);
+                continue;
+              }
+
+              // Unassign if diffHours >= warningPeriodHours after warning
+              if (diffHours >= warningPeriodHours && warningComment) {
+                const assigneeLogins = issue.assignees.map(a => a.login);
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  assignees: assigneeLogins,
+                });
+
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `ℹ️ You have been automatically unassigned from this issue due to prolonged inactivity.`
+                });
+
+                console.log(`Unassigned contributors from issue #${issue.number}`);
+              }
+            }

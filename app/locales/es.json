@@ -1,0 +1,116 @@
+{
+  "app_title": "Evaluación SoulSense",
+  "user_details_title": "SoulSense - Detalles del Usuario",
+  "enter_name": "Ingrese su nombre:",
+  "enter_age": "Ingrese su edad:",
+  "start_assessment": "Iniciar Evaluación",
+  "open_journal": "📝 Abrir Diario",
+  "view_dashboard": "📊 Ver Panel",
+  
+  "errors": {
+    "empty_name": "Por favor ingrese su nombre",
+    "invalid_age": "Por favor ingrese una edad válida (solo números)",
+    "minimum_age": "La edad debe ser al menos 12",
+    "select_option": "Por favor seleccione una opción"
+  },
+  
+  "quiz": {
+    "question_counter": "Pregunta {current} de {total}",
+    "strongly_disagree": "Totalmente en Desacuerdo",
+    "disagree": "En Desacuerdo",
+    "neutral": "Neutral",
+    "agree": "De Acuerdo",
+    "strongly_agree": "Totalmente de Acuerdo",
+    "previous": "← Anterior",
+    "next": "Siguiente →",
+    "finish": "Finalizar ✓",
+    "warning": "Advertencia"
+  },
+  
+  "questions": [
+    "Puedes reconocer tus emociones cuando ocurren.",
+    "Te resulta fácil entender por qué te sientes de cierta manera.",
+    "Puedes controlar tus emociones incluso en situaciones estresantes.",
+    "Reflexionas sobre tus reacciones emocionales ante las situaciones.",
+    "Eres consciente de cómo tus emociones afectan a los demás."
+  ],
+  
+  "results": {
+    "completed": "Completado",
+    "thank_you": "¡Gracias {username}!",
+    "your_score": "Tu Puntuación de IE: {score} de {max_score}",
+    "average": "Promedio: {average} por pregunta",
+    "view_dashboard_prompt": "¿Ver tu panel?"
+  },
+  
+  "journal": {
+    "title": "Diario Emocional",
+    "daily_reflection": "Reflexión Emocional Diaria",
+    "date": "Fecha: {date}",
+    "write_reflection": "Escribe tu reflexión emocional:",
+    "save_analyze": "Guardar y Analizar",
+    "view_past": "Ver Entradas Anteriores",
+    "dashboard": "📊 Panel",
+    "close": "Cerrar",
+    "empty_entry": "Entrada Vacía",
+    "empty_warning": "Por favor escribe algo antes de guardar.",
+    "too_short": "Demasiado Corto",
+    "short_warning": "Por favor escribe al menos 10 caracteres para un análisis significativo.",
+    "analysis_title": "Resultados del Análisis de IA",
+    "emotional_analysis": "Análisis Emocional",
+    "sentiment_score": "Puntuación de Sentimiento: {score}",
+    "positive_tone": "Tono emocional positivo detectado",
+    "negative_tone": "Tono emocional negativo detectado",
+    "neutral_tone": "Tono emocional neutral",
+    "emotional_patterns": "Patrones Emocionales:",
+    "past_entries_title": "Entradas de Diario Anteriores",
+    "emotional_journey": "Tu Viaje Emocional",
+    "no_entries": "No se encontraron entradas de diario. ¡Comienza a escribir para rastrear tu viaje emocional!",
+    "entry_date": "Fecha: {date}",
+    "entry_sentiment": "Sentimiento: {score} | Patrones: {patterns}",
+    "entry_content": "Entrada: {content}"
+  },
+  
+  "dashboard": {
+    "title": "📊 Panel de Salud Emocional",
+    "analytics": "📊 Análisis de Salud Emocional",
+    "correlation_tab": "🔗 Correlación",
+    "eq_trends_tab": "📈 Tendencias de IE",
+    "time_based_tab": "Análisis Basado en Tiempo",
+    "journal_tab": "📝 Análisis del Diario",
+    "insights_tab": "🔍 Perspectivas",
+    "correlation_title": "🔗 Análisis de Correlación",
+    "correlation_desc": "Analiza patrones y relaciones en tus puntuaciones de IE",
+    "run_analysis": "Ejecutar Análisis de Correlación",
+    "no_data": "No hay datos de IE disponibles",
+    "eq_progress": "📈 Progreso de Puntuación de IE a lo Largo del Tiempo",
+    "total_attempts": "Intentos Totales: {count}",
+    "latest_score": "Puntuación Reciente: {score}",
+    "best_score": "Mejor Puntuación: {score}",
+    "trend_title": "Tendencia de Puntuación de IE",
+    "trend_xlabel": "Número de Prueba",
+    "trend_ylabel": "Puntuación",
+    "distribution_title": "Distribución de Puntuación",
+    "distribution_xlabel": "Puntuación",
+    "distribution_ylabel": "Frecuencia",
+    "moving_avg_title": "Promedio Móvil de {window} Pruebas",
+    "moving_avg_ylabel": "Puntuación Promedio",
+    "performance_title": "Comparación de Rendimiento",
+    "performance_ylabel": "Puntuación Promedio",
+    "first_half": "Primera Mitad",
+    "second_half": "Segunda Mitad"
+  },
+  
+  "patterns": {
+    "stress_indicators": "Indicadores de estrés detectados",
+    "social_focus": "Enfoque social/relacional",
+    "growth_oriented": "Pensamiento orientado al crecimiento",
+    "self_reflective": "Contenido autorreflexivo",
+    "general_expression": "Expresión emocional general"
+  },
+  
+  "settings": {
+    "language": "Idioma",
+    "select_language": "Seleccionar Idioma"
+  }
+}

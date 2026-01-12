@@ -1,0 +1,35 @@
+timestamp,score,sentiment,reflection,is_rushed,is_inconsistent
+"2026-01-11T11:08:11.712235",10,-54.230000000000004,"I didnt do snything i fill bad",1,0
+"2026-01-11T10:50:21.012645",10,52.669999999999995,"feeling good",0,0
+"2026-01-11T10:41:46.644269",28,38.18,"i focused on my breathing and drank water",0,1
+"2026-01-11T07:54:02.586008",10,52.669999999999995,"feeling good",0,0
+"2026-01-10T19:45:58.809055",8,52.669999999999995,"feeling good",0,0
+"2026-01-10T19:43:51.969880",8,0.0,"",0,0
+"2026-01-10T19:41:50.255717",7,0.0,"",0,0
+"2026-01-10T19:20:10.245520",8,0.0,"",0,0
+"2026-01-10T19:14:32.872440",12,0.0,"",0,0
+"2026-01-10T18:55:27.653970",10,52.669999999999995,"feeling good",0,0
+"2026-01-10T18:52:57.474739",8,0.0,"",0,0
+"2026-01-10T18:41:58.565699",10,52.669999999999995,"i am feeling good",0,0
+"2026-01-10T18:34:37.699604",20,0.0,"",0,0
+"2026-01-10T18:23:10.277871",16,44.04,"i feel good",0,0
+"2026-01-10T18:07:03.774721",13,0.0,"",0,0
+"2026-01-10T18:05:40.330141",15,52.669999999999995,"i feeling good",0,0
+"2026-01-10T17:45:07.093251",25,44.04,"i deeling good today",0,0
+"2026-01-10T17:30:47.386972",17,-41.68,"i am not feeling good",0,0
+"2026-01-10T17:20:21.117692",18,68.08,"i am feeling great",0,0
+"2026-01-10T17:12:31.920920",23,68.08,"i am feeling great",0,0
+"2026-01-10T17:03:35.347404",14,62.49,"i am feeeling great",0,0
+"2026-01-10T16:43:53.821188",13,57.089999999999996,"i am feeling really good",0,0
+"2026-01-10T16:41:57.614953",13,57.089999999999996,"i am feeling really good",0,0
+"2026-01-10T16:29:36.898496",20,68.08,"i am feeling great",0,0
+"2026-01-10T16:26:56.382996",14,70.89,"i am feeling really great",0,0
+"2026-01-10T16:22:33.599237",21,12.8,"i am feeling really graeat",0,0
+"2026-01-10T16:18:10.652345",11,62.49,"i am feelign great",0,0
+"2026-01-10T15:35:46.898444",16,68.08,"i feeling great",0,0
+"2026-01-10T14:51:53.773839",18,52.669999999999995,"i am feeling good",0,0
+"2026-01-10T14:38:25.569928",20,57.089999999999996,"i am feeling really good",0,0
+"2026-01-10T14:13:45.078580",15,52.669999999999995,"i am feeling good",0,0
+"2026-01-10T13:42:13.115965",15,52.669999999999995,"I am feeling reallly good",0,0
+"2026-01-10T13:25:02.807673",15,52.669999999999995,"i am feeling good",0,0
+"2026-01-10T12:59:36.081601",17,-9.17,"Fix the following issues. The issues can be from different files or can overlap on same lines in one file.  - In @SOUL_SENSE_EXAM/app/ui/settings.py around lines 49 - 66, Remove the large explanatory comment block in settings.py and stabilize the design by adding a concrete attribute named total_questions_count on the app object during app initialization (e.g., in main.py set self.total_questions_count = len(all_questions) where all_questions is created), then update settings.py to read app.total_questions_count (with a defensive fallback using hasattr(app, ""total_questions_count"") ? app.total_questions_count : 50) so code no longer relies on a global and the intent is explicit.  - In @SOUL_SENSE_EXAM/app/ui/settings.py at line 48, The SettingsManager is creating gui state directly on the app (self.app.qcount_var, self.app.theme_var, self.app.sound_var) which couples ownership and recreates them each time show_settings() runs; instead, stop assigning attributes on self.app and either: 1) move these Tk variable creations into the App.__init__ (so App owns persistent qcount_var/theme_var/sound_var) and reference those here, or 2) make them local variables inside SettingsManager.show_settings() (create local tk.IntVar/ tk.StringVar/ tk.BooleanVar, initialize from self.app.settings, and on Apply copy values back into self.app.settings), or 3) promote them to SettingsManager instance attributes (self.qcount_var etc.) created once in SettingsManager.__init__ and reused in show_settings(); pick one approach and update show_settings(), SettingsManager.__init__, and the Apply handler to stop writing attributes directly to self.app.  - In @SOUL_SENSE_EXAM/app/ui/settings.py at line 69, The assignment line ""max_questions = min(50, self.app.total_questions_count)"" is indented with 5 spaces instead of the file's standard 4; fix by reducing its leading indentation to 4 spaces so it aligns with surrounding block (preserving the same enclosing method/class/if scope), then run the project's formatter/linter to ensure consistent spacing across app/ui/settings.py.  - In @SOUL_SENSE_EXAM/app/ui/settings.py around lines 164 - 175, save_settings may fail silently and subsequent calls to self.app.apply_theme, self.app.reload_questions, and self.app.create_welcome_screen can raise exceptions with no user feedback; wrap the post-save sequence in a try/except that catches Exception, shows a meaningful error to the user via messagebox.showerror (including the exception message), and only destroy settings_win and show the success message after successful completion; also handle the case when save_settings(self.app.settings) returns False by immediately showing an error/info dialog indicating the save failed and do not proceed with apply_theme/reload/create.",0,0

@@ -1,0 +1,26 @@
+name: Update AUTHORS.md
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  update-authors:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # IMPORTANT for contributor history
+
+      - name: Generate AUTHORS.md
+        uses: akhilmhdh/contributors-readme-action@v2.3.6
+        with:
+          file: SOUL_SENSE_EXAM/docs/AUTHORS.md
+          marker: CONTRIBUTORS-LIST
+          commit_message: "chore: update AUTHORS.md contributors"

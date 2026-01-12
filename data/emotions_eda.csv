@@ -1,0 +1,3 @@
+score_id,username,age,age_group_legacy,age_group_detailed,total_score,question_id,response_value,timestamp,export_timestamp
+1,k,15,child,13-17,9,,,,2026-01-06T21:17:33.865176
+2,dgc,19,adult,18-24,21,,,,2026-01-06T21:17:33.865186

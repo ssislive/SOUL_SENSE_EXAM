@@ -1,0 +1,59 @@
+name: Check PR Description Quality
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check-description:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = (pr.body || "").trim();
+
+            const minLength = 50;
+            const requiredSections = ["## Summary", "## Description"];
+            const placeholders = ["tbd", "todo", "wip", "update this"];
+
+            let issues = [];
+
+            if (body.length < minLength) {
+              issues.push(`PR description must be at least ${minLength} characters.`);
+            }
+
+            for (const section of requiredSections) {
+              if (!body.includes(section)) {
+                issues.push(`Missing required section: ${section}`);
+              }
+            }
+
+            for (const text of placeholders) {
+              if (body.toLowerCase().includes(text)) {
+                issues.push(`Contains placeholder text: "${text}"`);
+              }
+            }
+
+            if (issues.length === 0) {
+              console.log("PR description passed all checks.");
+              return;
+            }
+
+            const commentBody =
+              "PR description needs improvement:\n\n" +
+              issues.map(i => `- ${i}`).join("\n") +
+              "\n\nPlease update the description.";
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: commentBody,
+            });

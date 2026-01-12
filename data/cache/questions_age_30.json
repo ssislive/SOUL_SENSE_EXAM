@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-01-11T16:08:32.836384",
+  "questions": [
+    [
+      2,
+      "Adult question",
+      null,
+      20,
+      80
+    ]
+  ],
+  "age_filter": 30,
+  "count": 1
+}
