@@ -1,0 +1,130 @@
+# =========================
+# Python cache & bytecode
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual environments
+# =========================
+.env
+.env.*
+.envrc
+.venv
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================
+# Build / packaging
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+sdist/
+develop-eggs/
+.installed.cfg
+MANIFEST
+
+# =========================
+# Testing & coverage
+# =========================
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+*.py.cover
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Database files
+# =========================
+db/*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# IDEs & Editors
+# =========================
+.vscode/
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+*.swp
+
+# =========================
+# OS-specific
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Type checkers & linters
+# =========================
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# =========================
+# PyInstaller
+# =========================
+*.spec
+*.manifest
+
+# =========================
+# PyPI / tooling
+# =========================
+.pypirc
+__pypackages__/
+.pdm-python
+.pdm-build/
+.pixi
+
+# =========================
+# Misc
+# =========================
+.cache
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md
+# =========================
+# Data Organization
+# =========================
+data/*.db
+data/*.sqlite
+data/soulsense.db
+data/experiments/
+data/model_metrics.txt
+data/confusion_matrix.png
+
+# =========================
+# ML Artifacts
+# =========================
+models/*.pkl
+models/risk_model_*.pkl
+models/registry/
+
+# Logs
+logs/
