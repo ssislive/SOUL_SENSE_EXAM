@@ -1,0 +1,502 @@
+{
+  "username": "rohan",
+  "exported_at": "2026-01-11T16:39:34.351810",
+  "results": [
+    {
+      "timestamp": "2026-01-11T11:08:11.712235",
+      "score": 10,
+      "sentiment": -54.230000000000004,
+      "reflection": "I didnt do snything i fill bad",
+      "is_rushed": true,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-11T10:50:21.012645",
+      "score": 10,
+      "sentiment": 52.669999999999995,
+      "reflection": "feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-11T10:41:46.644269",
+      "score": 28,
+      "sentiment": 38.18,
+      "reflection": "i focused on my breathing and drank water",
+      "is_rushed": false,
+      "is_inconsistent": true
+    },
+    {
+      "timestamp": "2026-01-11T07:54:02.586008",
+      "score": 10,
+      "sentiment": 52.669999999999995,
+      "reflection": "feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T19:45:58.809055",
+      "score": 8,
+      "sentiment": 52.669999999999995,
+      "reflection": "feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T19:43:51.969880",
+      "score": 8,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T19:41:50.255717",
+      "score": 7,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T19:20:10.245520",
+      "score": 8,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T19:14:32.872440",
+      "score": 12,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:55:27.653970",
+      "score": 10,
+      "sentiment": 52.669999999999995,
+      "reflection": "feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:52:57.474739",
+      "score": 8,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:41:58.565699",
+      "score": 10,
+      "sentiment": 52.669999999999995,
+      "reflection": "i am feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:34:37.699604",
+      "score": 20,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:23:10.277871",
+      "score": 16,
+      "sentiment": 44.04,
+      "reflection": "i feel good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:07:03.774721",
+      "score": 13,
+      "sentiment": 0.0,
+      "reflection": "",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T18:05:40.330141",
+      "score": 15,
+      "sentiment": 52.669999999999995,
+      "reflection": "i feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T17:45:07.093251",
+      "score": 25,
+      "sentiment": 44.04,
+      "reflection": "i deeling good today",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T17:30:47.386972",
+      "score": 17,
+      "sentiment": -41.68,
+      "reflection": "i am not feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T17:20:21.117692",
+      "score": 18,
+      "sentiment": 68.08,
+      "reflection": "i am feeling great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T17:12:31.920920",
+      "score": 23,
+      "sentiment": 68.08,
+      "reflection": "i am feeling great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T17:03:35.347404",
+      "score": 14,
+      "sentiment": 62.49,
+      "reflection": "i am feeeling great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:43:53.821188",
+      "score": 13,
+      "sentiment": 57.089999999999996,
+      "reflection": "i am feeling really good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:41:57.614953",
+      "score": 13,
+      "sentiment": 57.089999999999996,
+      "reflection": "i am feeling really good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:29:36.898496",
+      "score": 20,
+      "sentiment": 68.08,
+      "reflection": "i am feeling great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:26:56.382996",
+      "score": 14,
+      "sentiment": 70.89,
+      "reflection": "i am feeling really great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:22:33.599237",
+      "score": 21,
+      "sentiment": 12.8,
+      "reflection": "i am feeling really graeat",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T16:18:10.652345",
+      "score": 11,
+      "sentiment": 62.49,
+      "reflection": "i am feelign great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T15:35:46.898444",
+      "score": 16,
+      "sentiment": 68.08,
+      "reflection": "i feeling great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T14:51:53.773839",
+      "score": 18,
+      "sentiment": 52.669999999999995,
+      "reflection": "i am feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T14:38:25.569928",
+      "score": 20,
+      "sentiment": 57.089999999999996,
+      "reflection": "i am feeling really good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T14:13:45.078580",
+      "score": 15,
+      "sentiment": 52.669999999999995,
+      "reflection": "i am feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T13:42:13.115965",
+      "score": 15,
+      "sentiment": 52.669999999999995,
+      "reflection": "I am feeling reallly good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T13:25:02.807673",
+      "score": 15,
+      "sentiment": 52.669999999999995,
+      "reflection": "i am feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T12:59:36.081601",
+      "score": 17,
+      "sentiment": -9.17,
+      "reflection": "Fix the following issues. The issues can be from different files or can overlap on same lines in one file.\n\n- In @SOUL_SENSE_EXAM/app/ui/settings.py around lines 49 - 66, Remove the large explanatory comment block in settings.py and stabilize the design by adding a concrete attribute named total_questions_count on the app object during app initialization (e.g., in main.py set self.total_questions_count = len(all_questions) where all_questions is created), then update settings.py to read app.total_questions_count (with a defensive fallback using hasattr(app, \"total_questions_count\") ? app.total_questions_count : 50) so code no longer relies on a global and the intent is explicit.\n\n- In @SOUL_SENSE_EXAM/app/ui/settings.py at line 48, The SettingsManager is creating gui state directly on the app (self.app.qcount_var, self.app.theme_var, self.app.sound_var) which couples ownership and recreates them each time show_settings() runs; instead, stop assigning attributes on self.app and either: 1) move these Tk variable creations into the App.__init__ (so App owns persistent qcount_var/theme_var/sound_var) and reference those here, or 2) make them local variables inside SettingsManager.show_settings() (create local tk.IntVar/ tk.StringVar/ tk.BooleanVar, initialize from self.app.settings, and on Apply copy values back into self.app.settings), or 3) promote them to SettingsManager instance attributes (self.qcount_var etc.) created once in SettingsManager.__init__ and reused in show_settings(); pick one approach and update show_settings(), SettingsManager.__init__, and the Apply handler to stop writing attributes directly to self.app.\n\n- In @SOUL_SENSE_EXAM/app/ui/settings.py at line 69, The assignment line \"max_questions = min(50, self.app.total_questions_count)\" is indented with 5 spaces instead of the file's standard 4; fix by reducing its leading indentation to 4 spaces so it aligns with surrounding block (preserving the same enclosing method/class/if scope), then run the project's formatter/linter to ensure consistent spacing across app/ui/settings.py.\n\n- In @SOUL_SENSE_EXAM/app/ui/settings.py around lines 164 - 175, save_settings may fail silently and subsequent calls to self.app.apply_theme, self.app.reload_questions, and self.app.create_welcome_screen can raise exceptions with no user feedback; wrap the post-save sequence in a try/except that catches Exception, shows a meaningful error to the user via messagebox.showerror (including the exception message), and only destroy settings_win and show the success message after successful completion; also handle the case when save_settings(self.app.settings) returns False by immediately showing an error/info dialog indicating the save failed and do not proceed with apply_theme/reload/create.",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T12:17:34.451447",
+      "score": 17,
+      "sentiment": 76.34,
+      "reflection": "Fix the following issues. The issues can be from different files or can overlap on same lines in one file.\n\n- In @SOUL_SENSE_EXAM/app/constants.py around lines 3 - 14, The global sample_size in the constants dict is inconsistent with the sum of the age_groups sample sizes; compute the total of the \"age_groups\" sample_size values (Under 18, 18-25, 26-35, 36-50, 51-65, 65+) and update the \"global\" -> \"sample_size\" entry to that exact sum (or adjust the individual group counts if the intended global total is 12,500) so that the \"age_groups\" and \"global\" sample_size values are consistent.\n\n- In @SOUL_SENSE_EXAM/app/main.py at line 1, Remove the invisible UTF-8 BOM at the start of the file so the first line begins exactly with \"import tkinter as tk\"; open SOUL_SENSE_EXAM/app/main.py in a text editor or IDE that can show hidden characters and delete the leading BOM character (the invisible U+FEFF) so linters, interpreters, and diffs see a clean \"import tkinter as tk\" line.\n\n- In @SOUL_SENSE_EXAM/app/main.py around lines 292 - 295, The create_welcome_screen method currently calls self.auth.create_welcome_screen() and then builds the entire UI locally, which is an inconsistent delegation pattern; decide which responsibility belongs to AuthManager: either remove the delegation call from Main.create_welcome_screen and keep the full local UI construction, or rename and repurpose the AuthManager method to prepare_welcome_screen (update AuthManager.create_welcome_screen to prepare_welcome_screen) and call self.auth.prepare_welcome_screen() here so its purpose is clearly \"setup/cleanup before UI build\"; update all references to the renamed method and ensure method names match (create_welcome_screen in Main and prepare_welcome_screen in AuthManager) to reflect the intended division of responsibility.\n\n- \n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 707 - 722, reset_defaults references an undefined DEFAULT_SETTINGS which will raise NameError when the \"Reset to Defaults\" button is clicked; add a module-level DEFAULT_SETTINGS constant (before the class or near other constants) containing keys \"question_count\", \"theme\", and \"sound_effects\" with appropriate default values (e.g., 10, \"light\", True) so reset_defaults, and any other code using DEFAULT_SETTINGS, can read from it; ensure the constant name matches exactly and that its key names align with the calls to self.qcount_var.set, self.theme_var.set, and self.sound_var.set.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 152 - 154, A module-level persistent DB connection and cursor (conn, cursor from get_connection()) can become stale and cause concurrency issues; remove the top-level conn/cursor variables and instead acquire a fresh connection and cursor inside each DB-using function (use the same pattern as save_answer()), e.g., call get_connection() locally, use a context manager or try/finally to ensure conn.close() and cursor.close(), and update any code referencing the global conn or cursor to use the local variables so each operation uses its own connection and isolated cursor for proper cleanup and error recovery.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 199 - 200, The code unconditionally calls JournalFeature(self.root) but JournalFeature may be None when the import failed (set to None at import time), causing a TypeError; modify the initialization to guard against a missing import by checking if JournalFeature is not None before instantiating (e.g., if JournalFeature: self.journal_feature = JournalFeature(self.root) else: self.journal_feature = None or a lightweight stub), or wrap the instantiation in a try/except that catches TypeError/ImportError and sets self.journal_feature to None/fallback to prevent crashes.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 1814 - 1816, Remove the duplicated pack call on card3: locate the consecutive statements calling card3.pack(fill=\"x\", padx=20, pady=10) and delete one of them so card3 is packed only once (ensure the remaining call uses the same arguments).\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 503 - 512, open_journal_flow currently assumes self.journal_feature is always initialized; add a null check before calling self.journal_feature.open_journal_window to avoid AttributeError when JournalFeature failed to import or was set to None. Specifically, in the open_journal_flow method, after ensuring self.username is set, verify that self.journal_feature is not None (and optionally has an open_journal_window attribute) and if it is None show an error dialog or log a clear error and return; otherwise call self.journal_feature.open_journal_window(self.username).\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 1003 - 1014, The database connection opened in finish_test (and similarly in save_answer) via get_connection() is never closed, causing a resource leak; update finish_test to ensure cursor and conn are closed in a finally block or use a context manager: after creating conn = get_connection() and cursor = conn.cursor(), wrap the try/except in try/finally and call cursor.close() and conn.close() (or use a with-statement if get_connection() returns a context manager) so the connection is always closed even on exceptions; reference the finish_test function, the get_connection call, and the cursor/conn variables when making the change.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 174 - 176, The code raises ResourceError when all_questions is empty but ResourceError is not defined; fix by either importing the existing exception (e.g., add an import for ResourceError at the top if it exists) or define a local exception class (e.g., class ResourceError(Exception): pass) near other exceptions, then keep the raise ResourceError(\"Question bank empty: No questions found in database.\") as is (or replace with a standard exception like ValueError if you prefer); search for ResourceError in the codebase to prefer importing an existing definition and add the import into main_fixed.py if found.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 1066 - 1073, The code calls self.sia.polarity_scores(text) without checking that self.sia is initialized, which will raise AttributeError if SentimentIntensityAnalyzer failed; modify the sentiment analysis block in the method containing self.sia usage to first check if self.sia is truthy (e.g., if self.sia is not None) before calling polarity_scores, and if it is None log a clear warning and set self.sentiment_score = 0.0; keep the existing exception handler for other errors and ensure you reference self.sia, polarity_scores and self.sentiment_score in the updated flow.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 971 - 990, The DB connection obtained via get_connection() (used as conn and cursor) is never closed, leaking resources; wrap usage in a context manager or ensure conn.close() runs in a finally block around the INSERT/commit/exception handling (or use \"with get_connection() as conn\" if the connection supports context management) and close the cursor/connection after commit/exception to guarantee the connection is released even on errors in the block that contains cursor.execute, conn.commit, and logging.error.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 274 - 280, The code unconditionally instantiates SentimentIntensityAnalyzer causing a TypeError when SENTIMENT_AVAILABLE is False; update the initialization in the try block to first check that SENTIMENT_AVAILABLE is True and SentimentIntensityAnalyzer is not None before creating an instance, otherwise set self.sia = None and log an appropriate message; keep the existing try/except around instantiation but guard the creation using the SENTIMENT_AVAILABLE flag and the SentimentIntensityAnalyzer symbol to avoid calling None.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 324 - 326, The code calls event.widget.bbox(\"insert\"), which raises a TclError for Button widgets; wrap the bbox call in a try/except (catch TclError) and fall back to computing tooltip coordinates from the widget or event (e.g., use event.x_root/event.y_root or event.widget.winfo_rootx()/winfo_rooty() plus widget.winfo_width()/winfo_height()) so the tooltip positions correctly for Buttons; update the block around the bbox call that currently assigns x, y to handle both Text/Entry and non-text widgets safely.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 1006 - 1014, The INSERT into the \"scores\" table references columns sentiment_score and reflection_text but the existing CREATE TABLE for \"scores\" only defines id, username, total_score, age, and timestamp; update the schema creation (the CREATE TABLE statement for \"scores\") to add sentiment_score (e.g., REAL or INTEGER depending on type) and reflection_text (TEXT) so the columns exist, or alternatively modify the cursor.execute INSERT call to only insert the columns present; ensure the database migration/creation code and the INSERT call (cursor.execute(\"INSERT INTO scores ...\")) remain consistent.\n\n- In @SOUL_SENSE_EXAM/app/main_fixed.py around lines 529 - 545, run_bias_check references SimpleBiasChecker which is not defined/imported and will raise NameError; update run_bias_check to either import the class (e.g., from its module) or add a guard that checks for its availability before instantiation, handling the missing class by logging a clear message or skipping the check; specifically modify the run_bias_check function to attempt importing/using SimpleBiasChecker (or wrap the instantiation in a try/except NameError) and ensure any fallback behavior (skipping bias check and logging) is implemented so the method cannot crash when SimpleBiasChecker is absent.\n\n- In @SOUL_SENSE_EXAM/app/pdf_generator.py at line 164, Replace the incorrect phrase \"Consider dedication time\" with the grammatically correct \"Consider dedicating time\" in the user-facing string found in pdf_generator.py (search for the exact substring \"Consider dedication time to emotional awareness practices and seek \"). Update that string literal so the rendered PDF/user text reads \"Consider dedicating time to emotional awareness practices and seek ...\" ensuring no other surrounding text is altered.\n\n- In @SOUL_SENSE_EXAM/app/pdf_generator.py at line 69, The call to _create_chart uses direct dict indexing on score_data['total_score'] and score_data['max_score'] which can raise KeyError; change these to use score_data.get('total_score', 0) and score_data.get('max_score', 0) (or another sensible default) and ensure the values are coerced to the expected numeric type before passing into _create_chart so missing keys won't crash the PDF generation.\n\n- In @SOUL_SENSE_EXAM/app/pdf_generator.py at line 76, The call to _get_interpretation uses score_data['total_score'] and score_data['max_score'] directly and can raise KeyError; before calling _get_interpretation (in pdf_generator.py where score_data is used) validate that 'total_score' and 'max_score' exist and are the expected numeric types (or use score_data.get('total_score') / .get('max_score') with sensible defaults), and if missing raise or log a clear error/handle gracefully so _get_interpretation receives safe values.\n\n- In @SOUL_SENSE_EXAM/app/pdf_generator.py around lines 17 - 20, The elements list is initialized in __init__ and therefore accumulates across multiple generate() calls; to fix, stop storing persistent state by removing self.elements = [] from PDFReportGenerator.__init__ and instead initialize a fresh local or instance list at the start of generate() (e.g., set self.elements = [] or a local variable elements inside generate()) so each call builds a new list before appending content.\n\n- In @SOUL_SENSE_EXAM/app/pdf_generator.py at line 2, Remove the unused import of the os module from the top of SOUL_SENSE_EXAM/app/pdf_generator.py by deleting the line that reads \"import os\" so the file no longer contains an unused dependency; ensure no other references to os remain in functions like any PDF generation helpers before committing.\n\n- In @SOUL_SENSE_EXAM/app/ui/auth.py around lines 226 - 242, The validation helpers validate_name_input and validate_age_input are never used and their return signatures differ; update them to a consistent API (e.g., (is_valid, value_or_none, error_message_or_none) \u2014 change validate_name_input to return (bool, name, error) and keep validate_age_input as (bool, age, error)), then call these validators from create_username_screen to validate user input, display the returned error_message when is_valid is False, and prevent advancing until valid; also ensure any external callers (e.g., app.start_test) either use the new return shape or access the validators via the app instance if intended to be reused.\n\n- In @SOUL_SENSE_EXAM/app/ui/auth.py at line 184, The Enter key binding created with self.root.bind(\"<Return>\", self._enter_start) persists across screens; store the returned binding id (e.g. self._enter_binding_id = self.root.bind(...)) and call self.root.unbind(\"<Return>\", self._enter_binding_id) when leaving this screen (add the unbind call in the two button handlers that navigate away from this screen and any cleanup/destructor). Ensure you reference the same _enter_start callback and clear the saved id after unbinding so the binding is not left active.\n\n- In @SOUL_SENSE_EXAM/app/ui/exam.py around lines 193 - 201, save_answer is INSERTing a new row every time, causing duplicate responses when a user re-answers; change the SQL in the cursor.execute inside save_answer to use an upsert (e.g., \"INSERT OR REPLACE INTO responses (...) VALUES (...)\" or \"INSERT ... ON CONFLICT(username, question_id) DO UPDATE SET response_value=excluded.response_value, age_group=excluded.age_group, timestamp=excluded.timestamp\") so existing (username, question_id) rows are updated instead of duplicated, and ensure the responses table has a UNIQUE constraint on (username, question_id) to enable the upsert behavior.\n\n- In @SOUL_SENSE_EXAM/app/ui/exam.py around lines 278 - 289, The DB connection opened via get_connection() in the final-score save block is never closed (same leak as save_answer); wrap the cursor/connection use in a try/except/finally (or use a context manager) to ensure cursor.close() and conn.close() always run after commit or on exception, or convert to a with-style context if get_connection() supports it; update the block that calls get_connection(), cursor = conn.cursor(), cursor.execute(...), conn.commit() to always close both cursor and conn in the finally path and mirror the same fix in save_answer.\n\n- In @SOUL_SENSE_EXAM/app/ui/exam.py around lines 187 - 205, The DB connection opened via get_connection() (conn) and its cursor are never closed in submit logic that inserts into responses (cursor.execute / conn.commit), causing a resource leak; fix by ensuring cursor and connection are closed after use\u2014either wrap get_connection() in a context manager or add a try/except/finally where you close cursor and call conn.close() in the finally block (and still log exceptions with exc_info=True) so resources are always released even on error.\n\n- In @SOUL_SENSE_EXAM/app/ui/exam.py around lines 62 - 64, show_question currently calls finish_test() directly when app.current_question >= len(self.app.questions), which bypasses the reflection flow that save_answer uses; change the branch in show_question to invoke show_reflection_screen() (or call show_reflection_screen() then finish_test()) instead of directly calling finish_test(), or alternatively add a guard so show_question cannot be called when app.current_question >= len(self.app.questions); update the code around show_question, finish_test, save_answer, show_reflection_screen, and checks of self.app.current_question/self.app.questions to implement the chosen fix.\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 514 - 538, The EQ category scores are being generated with random.uniform in the loop that computes cat_score (uses self.app.current_percentage), which leads to inconsistent, potentially negative or misleading values each render; replace the random-based logic with either: a) real per-category calculations derived from stored responses/scores (compute each category score from the data source used to produce self.app.current_percentage and set cat_score accordingly), or b) deterministic placeholders that are clamped to [0,100] and clearly labeled as illustrative (add a visible disclaimer label like \"Illustrative only\" near the categories), and remove random.uniform usage; ensure the computed cat_score is bounded via min/max or a clamp before rendering and update references to cat_score/cat_fill_width/cat_color in the category rendering loop.\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 999 - 1002, The try/except block around datetime.fromisoformat(timestamp) uses a bare except; change it to catch specific exceptions (e.g., ValueError and TypeError) so you don't swallow system exceptions\u2014use except (ValueError, TypeError) as e and then fall back to date_str = str(timestamp) (refer to the datetime.fromisoformat call, timestamp variable, and date_str assignment in results.py).\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 76 - 85, The profession comparison dict is missing the sample_size key which makes it inconsistent with the global and age_group entries; update the block that builds comparisons[\"profession\"] (using self.app.profession, prof_bench = BENCHMARK_DATA[\"professions\"][self.app.profession]) to include \"sample_size\": prof_bench.get(\"sample_size\", 0) (or the correct field name from prof_bench) alongside \"avg_score\", \"std_dev\"-based percentile via calculate_percentile so the structure matches other comparisons and avoids KeyError.\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 289 - 341, There are two nearly identical sentiment display blocks creating sentiment_frame and showing sentiment score in both score_display_frame and summary_frame; remove the duplicate block inside summary_frame (the second occurrence that also creates sentiment_frame and sentiment_score_label) and keep the original in score_display_frame: delete the block that references summary_frame and constructs sentiment_frame, the color/label logic, sentiment_score_label, and sentiment_desc so only the single sentiment UI using self.app.sentiment_score remains.\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 544 - 551, The f-string in summary_text is malformed: the conditional \"if self.app.responses else 0\" is outside the expression and causes literal text and can raise ZeroDivisionError; change the average calculation to compute a guarded expression inside the f-string (or compute a local avg first) such as using (self.app.current_score / len(self.app.responses)) if self.app.responses else 0 and format it with :.1f inside the braces so summary_text contains a numeric average without dividing by zero; update the line referencing self.app.current_score/self.app.responses accordingly.\n\n- In @SOUL_SENSE_EXAM/app/ui/results.py around lines 594 - 602, The DB connection returned by get_connection() in the block around previous_count is never closed; update the code in the functions show_history_screen, display_user_history, show_comparison_screen (and the block that computes previous_count) to either use a context manager (e.g., with get_connection() as conn: and acquire cursor from conn) or explicitly call conn.close() after finishing cursor operations, and ensure the cursor is closed/finished before closing the connection; keep the same logic but wrap the SELECT/fetchone usage so the connection is reliably closed even on exceptions.\n\n- In @SOUL_SENSE_EXAM/app/ui/styles.py around lines 77 - 79, The call to event.widget.bbox(\"insert\") in the positioning logic can raise AttributeError for non-Text/Entry widgets; modify the handler in styles.py to first check the widget supports bbox (e.g., isinstance(event.widget, (tk.Text, tk.Entry)) or hasattr(event.widget, \"bbox\")) and only call event.widget.bbox(\"insert\") when valid, catching AttributeError as a fallback; if bbox is unavailable, compute x,y using event.x_root/event.y_root or event.widget.winfo_rootx()/winfo_rooty() so x and y are always defined before adjusting with +25 offsets.\n\n- In @SOUL_SENSE_EXAM/app/ui/styles.py at line 98, The delayed lambda can run after tooltip_win was already removed, causing attribute errors or destroy() on a dead widget; replace the inline lambda used in self.root.after with a small helper (e.g., _safe_destroy_tooltip) that uses getattr(self.app, 'tooltip_win', None) to fetch the widget, checks truthiness and widget.likely-existence via widget.winfo_exists() (or equivalent) and then calls widget.destroy() inside a try/except to swallow any errors, and optionally clears self.app.tooltip_win after successful destroy; update the self.root.after call to reference this helper instead of the fragile lambda.\n\n- In @SOUL_SENSE_EXAM/scripts/verify_refactor.py at line 30, Fix the inconsistent indentation in verify_refactor.py by removing the extra leading spaces on the two print statements (the lines containing print(\"SUCCESS: ResultsManager has show_visual_results\") and the similar print on line 32) so they align with the surrounding block indentation; update those print statements to use the same indentation level as nearby statements in the same function or scope (e.g., in the function where ResultsManager usage occurs) to ensure consistent formatting and readability.\n\n- In @SOUL_SENSE_EXAM/scripts/verify_refactor.py around lines 28 - 36, The script currently prints a failure message when app.results lacks show_visual_results but still exits with code 0; update verify_refactor.py to import sys and ensure the process exits non\u2011zero on verification failures by calling sys.exit(1) when a failure is detected (e.g., when the missing list is non-empty or when the hasattr check for app.results.show_visual_results fails) instead of allowing the script to exit with 0; you can set a failure flag or check the missing list after the loop and call sys.exit(1) if any failures were found.\n\n- In @SOUL_SENSE_EXAM/scripts/verify_refactor.py around lines 38 - 42, The Tk root window may not be destroyed if an exception occurs before the current root.destroy() call; wrap the code that runs after creating the Tk instance in a try/finally so you always call root.destroy() in the finally block, and in the finally guard that root is defined/non-None before calling root.destroy(); update the exception handling (where you print \"FAILURE: Error during instantiation: {e}\" and sys.exit(1)) to re-raise or let the finally run so cleanup always happens.",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T12:05:42.391620",
+      "score": 15,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T12:00:50.694949",
+      "score": 16,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:54:26.955319",
+      "score": 20,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:37:53.369835",
+      "score": 13,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:33:12.043095",
+      "score": 13,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:30:18.525079",
+      "score": 21,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:13:30.656084",
+      "score": 17,
+      "sentiment": 42.15,
+      "reflection": "hi @nupurmadaan04, I would like to work on this issue pls assign it to me",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T11:02:34.470970",
+      "score": 6,
+      "sentiment": 70.89,
+      "reflection": "I am feeling really great",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T10:42:03.993289",
+      "score": 13,
+      "sentiment": 57.089999999999996,
+      "reflection": "i am feeling really good today",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-10T10:36:36.528227",
+      "score": 15,
+      "sentiment": 57.089999999999996,
+      "reflection": "I am feeling really good today",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:55:09.167373",
+      "score": 36,
+      "sentiment": 0.0,
+      "reflection": "i am fillling really grat",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:53:38.794669",
+      "score": 15,
+      "sentiment": -47.67,
+      "reflection": "I feel terrible",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:49:15.450227",
+      "score": 13,
+      "sentiment": 0.0,
+      "reflection": "i am felling grat",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:46:29.342094",
+      "score": 11,
+      "sentiment": -47.67,
+      "reflection": "I feel terrible",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:42:56.552069",
+      "score": 18,
+      "sentiment": -47.67,
+      "reflection": "I feel terrible",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:36:17.561993",
+      "score": 22,
+      "sentiment": 44.04,
+      "reflection": "i am feelig good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:10:33.450876",
+      "score": 17,
+      "sentiment": 57.089999999999996,
+      "reflection": "i am feeling really good today",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:09:54.662865",
+      "score": 27,
+      "sentiment": -34.12,
+      "reflection": "i am not felling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:09:36.133090",
+      "score": 27,
+      "sentiment": -34.12,
+      "reflection": "i am not felling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T14:07:16.698265",
+      "score": 27,
+      "sentiment": -34.12,
+      "reflection": "i am not felling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:59:47.493968",
+      "score": 19,
+      "sentiment": 0.0,
+      "reflection": "I am not feeling good",
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:18:29.309741",
+      "score": 29,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:16:56.700051",
+      "score": 29,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:16:52.665576",
+      "score": 27,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:16:48.165169",
+      "score": 25,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:16:40.873489",
+      "score": 23,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    },
+    {
+      "timestamp": "2026-01-09T13:16:32.527628",
+      "score": 21,
+      "sentiment": null,
+      "reflection": null,
+      "is_rushed": false,
+      "is_inconsistent": false
+    }
+  ]
+}

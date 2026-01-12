@@ -177,7 +177,8 @@ class SoulSenseApp:
         # Initialize ML Predictor
 
         try:
-            self.ml_predictor = SoulSenseMLPredictor()
+            from app.ml.risk_predictor import RiskPredictor
+            self.ml_predictor = RiskPredictor()
             logging.info("ML Predictor initialized successfully")
         except Exception as e:
             logging.error(f"Failed to initialize ML Predictor: {e}")
@@ -263,7 +264,35 @@ class SoulSenseApp:
         logging.info("Using %s questions based on settings", len(self.questions))
         
         self.total_questions_count = len(all_questions)
+        
+        # User State
+        self.current_user_id = None
+        self.username = ""
+        self.age = None
+        self.age_group = None
+        self.profession = None
+        
         self.create_welcome_screen()
+
+    def load_user_settings(self, user_id):
+        """Load and apply settings for specific user"""
+        from app.db import get_user_settings
+        
+        self.current_user_id = user_id
+        user_settings = get_user_settings(user_id)
+        
+        # Update current settings
+        self.settings.update(user_settings)
+        logging.info(f"Loaded settings for user {user_id}: {user_settings}")
+        
+        # Apply immediate effects
+        self.apply_theme(self.settings.get("theme", "light"))
+        
+        # Reload questions if count changed
+        q_count = self.settings.get("question_count", 10)
+        self.reload_questions(q_count)
+        
+        return user_settings
 
     def reload_questions(self, count):
         """Reload questions based on new settings count"""

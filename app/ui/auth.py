@@ -440,5 +440,36 @@ class AuthManager:
             f"questions={len(self.app.questions)}"
         )
         
+        # Check/Create User in DB for Settings Persistence
+        try:
+            from app.db import get_session
+            from app.models import User
+            from datetime import datetime
+            
+            session = get_session()
+            user = session.query(User).filter_by(username=username).first()
+            
+            if not user:
+                # Implicit Registration
+                user = User(
+                    username=username,
+                    password_hash="guest_access", 
+                    created_at=datetime.utcnow().isoformat(),
+                    last_login=datetime.utcnow().isoformat()
+                )
+                session.add(user)
+                session.commit()
+                logging.info(f"Created new user for settings: {username}")
+            else:
+                user.last_login = datetime.utcnow().isoformat()
+                session.commit()
+            
+            # Load User Settings
+            self.app.load_user_settings(user.id)
+            session.close()
+            
+        except Exception as e:
+            logging.error(f"Failed to load user settings: {e}")
+
         # Start exam
         self.app.start_test()

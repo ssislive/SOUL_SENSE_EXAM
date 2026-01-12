@@ -1,4 +1,4 @@
-# 🧠 Soul Sense EQ Test  
+# 🧠 Soul Sense EQ Test
 
 Soul Sense EQ Test is a desktop-based Emotional Intelligence (EQ) assessment application built using Python, Tkinter, and SQLite.
 It provides a ✅ Tip: If you see `ModuleNotFoundError`, it usually means your virtual environment is **not active** or the package isn't installed inside it.
@@ -230,6 +230,33 @@ The journal feature allows users to:
 - **Emotional Tracking:** Monitors emotional trends over time
 
 The journal feature is informed by research on expressive writing and emotional processing (Pennebaker, 1997; Smyth, 1998), which demonstrates the therapeutic benefits of written emotional expression. The AI sentiment analysis uses natural language processing techniques validated in computational psychology research (Calvo & D'Mello, 2010).
+
+---
+
+## 🤖 ML Model Training (Real User Data)
+
+Soul Sense now supports training a custom Machine Learning model on **real local user data** to provide personalized risk assessments.
+
+### How It Works
+
+1.  **Data Collection**: As users take tests and write journals, data accumulates in `db/soulsense.db`.
+2.  **Threshold**: The system requires at least **100 records** to ensure statistical validity.
+3.  **Training**: The `train_real_model.py` script extracts this data, labels it based on risk factors (Score + Sentiment), and trains a Random Forest model.
+4.  **Inference**: The app automatically uses the latest trained model for future predictions.
+
+### Command to Train
+
+```bash
+python scripts/train_real_model.py
+```
+
+_Note: If you have fewer than 100 records, the script will abort to prevent overfitting._
+
+### 📊 Data Distribution
+
+The following chart emphasizes the quantity of data points across risk categories and score ranges used for training:
+
+![Training Data Distribution](docs/images/training_data_distribution.png)
 
 ---
 
@@ -616,5 +643,3 @@ result = detector.detect_inconsistency_patterns(session, "john_doe", time_window
 
 We welcome contributions from the community.  
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing to help maintain a respectful and inclusive environment.
-
-

@@ -33,6 +33,7 @@ def upgrade() -> None:
             sa.Column('content', sa.Text(), nullable=True),
             sa.Column('sentiment_score', sa.Float(), nullable=True),
             sa.Column('emotional_patterns', sa.Text(), nullable=True),
+            sa.Column('user_id', sa.Integer(), nullable=True),
             sa.PrimaryKeyConstraint('id')
         )
 

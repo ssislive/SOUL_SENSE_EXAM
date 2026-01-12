@@ -1,14 +1,17 @@
 {
-  "database": {
-    "filename": "soulsense.db",
-    "path": "db"
-  },
-  "ui": {
-    "theme": "light",
-    "window_size": "800x600"
-  },
-  "features": {
-    "enable_journal": true,
-    "enable_analytics": true
-  }
+    "database": {
+        "filename": "soulsense.db",
+        "path": "db"
+    },
+    "ui": {
+        "theme": "light",
+        "window_size": "800x600"
+    },
+    "features": {
+        "enable_journal": true,
+        "enable_analytics": true
+    },
+    "exam": {
+        "num_questions": 5
+    }
 }

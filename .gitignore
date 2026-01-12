@@ -123,6 +123,7 @@ data/confusion_matrix.png
 # ML Artifacts
 # =========================
 models/*.pkl
+models/risk_model_*.pkl
 models/registry/
 
 # Logs

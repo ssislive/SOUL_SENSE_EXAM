@@ -336,9 +336,18 @@ class SettingsManager:
         # Save settings
         self.app.settings.update(new_settings)
         
-        if save_settings(self.app.settings):
-            # Apply theme immediately
-            self.app.apply_theme(new_settings["theme"])
+        saved_to_db = False
+        if hasattr(self.app, 'current_user_id') and self.app.current_user_id:
+            try:
+                from app.db import update_user_settings
+                update_user_settings(self.app.current_user_id, **new_settings)
+                saved_to_db = True
+            except Exception as e:
+                print(f"Failed to save settings to DB: {e}")
+        
+        # Apply theme immediately
+        self.app.apply_theme(new_settings["theme"])
+
             
             # Reload questions
             if hasattr(self.app, 'reload_questions'):

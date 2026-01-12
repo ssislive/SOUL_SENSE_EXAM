@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-01-12T00:13:39.724709",
+  "timestamp": "2026-01-11T16:10:26.473144",
   "questions": [
     [
       1,
@@ -72,6 +72,6 @@
       120
     ]
   ],
-  "age_filter": null,
+  "age_filter": 20,
   "count": 10
 }
