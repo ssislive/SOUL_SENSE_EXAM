@@ -117,6 +117,12 @@ class JournalEntry(Base):
     content = Column(Text)
     sentiment_score = Column(Float)
     emotional_patterns = Column(Text)
+    
+    # New fields for daily wellbeing tracking (Issues #255, #267, #272)
+    sleep_hours = Column(Float, nullable=True)     # Range: 0-24
+    sleep_quality = Column(Integer, nullable=True) # Range: 1-10
+    energy_level = Column(Integer, nullable=True)  # Range: 1-10
+    work_hours = Column(Float, nullable=True)      # Range: 0-24
 
 # Simple function to get session (from upstream)
 def get_session():

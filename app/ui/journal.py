@@ -56,6 +56,32 @@ class JournalFeature:
         tk.Label(self.journal_window, text=self.i18n.get("journal.date", date=today), 
                 font=("Arial", 12)).pack(pady=5)
         
+        # --- Metrics Section (Issues #255, #267, #272) ---
+        metrics_frame = tk.LabelFrame(self.journal_window, text=self.i18n.get("journal.metrics_title"), font=("Arial", 11, "bold"))
+        metrics_frame.pack(pady=5, padx=20, fill="x")
+        
+        # Grid Configuration
+        metrics_frame.columnconfigure((1, 3), weight=1)
+        
+        # Row 0: Sleep Duration & Quality
+        tk.Label(metrics_frame, text=self.i18n.get("journal.sleep_hours")).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.sleep_hours_var = tk.DoubleVar(value=7.0)
+        tk.Scale(metrics_frame, from_=0, to=16, resolution=0.5, orient="horizontal", variable=self.sleep_hours_var).grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        
+        tk.Label(metrics_frame, text=self.i18n.get("journal.sleep_quality")).grid(row=0, column=2, padx=5, pady=5, sticky="w")
+        self.sleep_quality_var = tk.IntVar(value=7)
+        tk.Scale(metrics_frame, from_=1, to=10, orient="horizontal", variable=self.sleep_quality_var).grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+        
+        # Row 1: Energy & Work
+        tk.Label(metrics_frame, text=self.i18n.get("journal.energy_level")).grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.energy_level_var = tk.IntVar(value=7)
+        tk.Scale(metrics_frame, from_=1, to=10, orient="horizontal", variable=self.energy_level_var).grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        
+        tk.Label(metrics_frame, text=self.i18n.get("journal.work_hours")).grid(row=1, column=2, padx=5, pady=5, sticky="w")
+        self.work_hours_var = tk.DoubleVar(value=8.0)
+        tk.Scale(metrics_frame, from_=0, to=16, resolution=0.5, orient="horizontal", variable=self.work_hours_var).grid(row=1, column=3, padx=5, pady=5, sticky="ew")
+        # ------------------------------------------------
+        
         # Text area for journal entry
         tk.Label(self.journal_window, text=self.i18n.get("journal.write_reflection"), 
                 font=("Arial", 12)).pack(pady=(10,5))
@@ -167,7 +193,12 @@ class JournalFeature:
                 entry_date=entry_date,
                 content=content,
                 sentiment_score=sentiment_score,
-                emotional_patterns=emotional_patterns
+                emotional_patterns=emotional_patterns,
+                # Metrics
+                sleep_hours=self.sleep_hours_var.get(),
+                sleep_quality=self.sleep_quality_var.get(),
+                energy_level=self.energy_level_var.get(),
+                work_hours=self.work_hours_var.get()
             )
             session.add(entry)
             session.commit()
@@ -249,6 +280,16 @@ class JournalFeature:
                     text_area.insert(tk.END, self.i18n.get("journal.entry_sentiment", 
                                                            score=f"{entry.sentiment_score:.1f}", 
                                                            patterns=entry.emotional_patterns) + "\n")
+                    
+                    # Display metrics if available (Backward compatibility)
+                    if getattr(entry, 'sleep_hours', None) is not None:
+                         metrics_str = self.i18n.get("journal.entry_metrics",
+                                                     sleep_h=entry.sleep_hours,
+                                                     sleep_q=entry.sleep_quality,
+                                                     energy=entry.energy_level,
+                                                     work=entry.work_hours)
+                         text_area.insert(tk.END, metrics_str + "\n")
+
                     text_area.insert(tk.END, self.i18n.get("journal.entry_content", content=entry.content) + "\n")
                     text_area.insert(tk.END, "-" * 70 + "\n\n")
         finally:
