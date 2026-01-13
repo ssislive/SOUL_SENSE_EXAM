@@ -52,7 +52,7 @@ class SoulSenseMLPredictor:
             self.load_model()
             # Check if loaded model has sentiment support
             if 'sentiment_score' not in self.feature_names:
-                print("🔄 Model outdated (no sentiment). Retraining...")
+                logger.info("Model outdated (no sentiment). Retraining...")
                 # RESET feature names to include sentiment_score
                 self.feature_names = [
                     'emotional_recognition',
@@ -68,10 +68,10 @@ class SoulSenseMLPredictor:
                 self.train_sample_model()
                 self.save_model()
             else:
-                print("✅ Loaded existing ML model")
+                logger.info("Loaded existing ML model")
         except Exception as e:
             logger.info(f"No existing model found: {e}")
-            print("🔄 Training new ML model...")
+            logger.info("Training new ML model...")
             self.train_sample_model()
             self.save_model()
     
@@ -195,14 +195,11 @@ class SoulSenseMLPredictor:
             precision = precision_score(y_test, y_pred, average='weighted')
             recall = recall_score(y_test, y_pred, average='weighted')
             
-            print(f"✅ Model trained successfully!")
-            print(f"   Training accuracy: {train_acc:.2%}")
-            print(f"   Test accuracy: {test_acc:.2%}")
+            logger.info(f"Model trained successfully! Train: {train_acc:.2%}, Test: {test_acc:.2%}")
             
             # Detailed Evaluation
-            print("\n📊 Detailed Classification Report:")
             report = classification_report(y_test, y_pred, target_names=self.class_names)
-            print(report)
+            logger.info(f"Classification Report:\n{report}")
             
             # Log metrics to versioning system (Merged from Origin)
             if self.use_versioning and self.versioning_manager:
@@ -234,7 +231,7 @@ class SoulSenseMLPredictor:
             f.write("SoulSense ML Model Evaluation\n")
             f.write("=============================\n\n")
             f.write(report)
-        print("📝 Metrics saved to model_metrics.txt")
+        logger.info("Metrics saved to model_metrics.txt")
         
         # 2. Save Confusion Matrix Plot
         cm = confusion_matrix(y_true, y_pred)
@@ -248,7 +245,7 @@ class SoulSenseMLPredictor:
         plt.tight_layout()
         plt.savefig('confusion_matrix.png')
         plt.close()
-        print("📉 Confusion matrix saved to confusion_matrix.png")
+        logger.info("Confusion matrix saved to confusion_matrix.png")
     
     def predict_with_explanation(self, q_scores, age, total_score, sentiment_score=0.0):
         """Make prediction with XAI explanations"""
@@ -485,7 +482,7 @@ class SoulSenseMLPredictor:
             
             if self.model_metadata:
                 self.current_version = self.model_metadata.version
-                print(f"✅ ML model registered as v{self.current_version}")
+                logger.info(f"ML model registered as v{self.current_version}")
         
         # Also save to legacy location for backward compatibility
         model_data = {
@@ -498,7 +495,7 @@ class SoulSenseMLPredictor:
         
         with open('soulsense_ml_model.pkl', 'wb') as f:
             pickle.dump(model_data, f)
-        print("✅ ML model saved to soulsense_ml_model.pkl")
+        logger.info("ML model saved to soulsense_ml_model.pkl")
     
     def load_model(self, version: str = None):
         """Load model with versioning support"""
@@ -529,7 +526,7 @@ class SoulSenseMLPredictor:
                 self.current_version = metadata.version
                 self.model_metadata = metadata
                 loaded_from_registry = True
-                print(f"✅ ML model loaded from registry (v{self.current_version})")
+                logger.info(f"ML model loaded from registry (v{self.current_version})")
                 return
             except Exception as e:
                 logger.debug(f"Could not load from registry: {e}")
@@ -544,7 +541,7 @@ class SoulSenseMLPredictor:
             self.feature_names = model_data['feature_names']
             self.class_names = model_data['class_names']
             self.current_version = model_data.get('version', 'legacy')
-            print(f"✅ ML model loaded from soulsense_ml_model.pkl (v{self.current_version})")
+            logger.info(f"ML model loaded from soulsense_ml_model.pkl (v{self.current_version})")
     
     def load_specific_version(self, version: str):
         """Load a specific model version"""
@@ -553,7 +550,7 @@ class SoulSenseMLPredictor:
     def promote_to_production(self, version: str = None):
         """Promote a model version to production"""
         if not self.use_versioning or not self.versioning_manager:
-            print("⚠️ Versioning not enabled")
+            logger.warning("Versioning not enabled")
             return False
         
         target_version = version or self.current_version
@@ -580,7 +577,7 @@ class SoulSenseMLPredictor:
     def rollback(self, version: str):
         """Rollback to a previous model version"""
         if not self.use_versioning or not self.versioning_manager:
-            print("⚠️ Versioning not enabled")
+            logger.warning("Versioning not enabled")
             return False
         
         success = self.versioning_manager.registry.rollback(self.MODEL_NAME, version)
