@@ -195,6 +195,54 @@ class AdminCLI:
         print(f"\n{tabulate(table_data, headers=headers, tablefmt='grid')}\n")
         print(f"Total categories: {len(category_counts)}\n")
     
+    def list_users(self):
+        """List all users with preferences"""
+        users = self.db.get_all_users()
+        
+        if not users:
+            print("\nNo users found.\n")
+            return
+        
+        table_data = []
+        for u in users:
+            table_data.append([
+                u['username'],
+                u.get('advice_language', 'en'),
+                u.get('advice_tone', 'friendly'),
+                u.get('created_at', 'N/A')
+            ])
+        
+        headers = ["Username", "Language", "Tone", "Created At"]
+        print(f"\n{tabulate(table_data, headers=headers, tablefmt='grid')}\n")
+        print(f"Total users: {len(users)}\n")
+    
+    def update_user_prefs(self, username):
+        """Update user preferences"""
+        users = self.db.get_all_users()
+        user = next((u for u in users if u['username'] == username), None)
+        
+        if not user:
+            print(f"\nUser '{username}' not found\n")
+            return
+        
+        print(f"\nCurrent preferences for {username}:")
+        print(f"Language: {user.get('advice_language', 'en')}")
+        print(f"Tone: {user.get('advice_tone', 'friendly')}\n")
+        
+        lang = input("New language (en/hi/es) [press Enter to keep]: ").strip() or None
+        tone = input("New tone (professional/friendly/direct/empathetic) [press Enter to keep]: ").strip() or None
+        
+        if lang or tone:
+            lang = lang if lang else user.get('advice_language', 'en')
+            tone = tone if tone else user.get('advice_tone', 'friendly')
+            
+            if self.db.update_user_preferences(username, lang, tone):
+                print(f"\nPreferences updated successfully!\n")
+            else:
+                print(f"\nFailed to update preferences\n")
+        else:
+            print("\nNo changes made\n")
+    
     def create_admin_user(self):
         """Create a new admin user"""
         print("\n" + "="*50)
@@ -226,12 +274,13 @@ class AdminCLI:
 def main():
     """Main CLI function"""
     parser = argparse.ArgumentParser(description="SoulSense Admin CLI")
-    parser.add_argument('command', choices=['list', 'add', 'view', 'update', 'delete', 'categories', 'create-admin'],
+    parser.add_argument('command', choices=['list', 'add', 'view', 'update', 'delete', 'categories', 'create-admin', 'users', 'update-prefs'],
                        help='Command to execute')
     parser.add_argument('--id', type=int, help='Question ID (for view, update, delete)')
     parser.add_argument('--category', help='Filter by category (for list)')
     parser.add_argument('--inactive', action='store_true', help='Include inactive questions (for list)')
     parser.add_argument('--no-auth', action='store_true', help='Skip authentication (for create-admin only)')
+    parser.add_argument('--username', help='Username (for update-prefs)')
     
     args = parser.parse_args()
     
@@ -275,6 +324,15 @@ def main():
     
     elif args.command == 'create-admin':
         cli.create_admin_user()
+    
+    elif args.command == 'users':
+        cli.list_users()
+    
+    elif args.command == 'update-prefs':
+        if not args.username:
+            print("✗ --username is required for update-prefs command")
+            sys.exit(1)
+        cli.update_user_prefs(args.username)
 
 
 if __name__ == "__main__":

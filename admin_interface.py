@@ -179,6 +179,34 @@ class QuestionDatabase:
         conn.close()
         return categories
     
+    def get_all_users(self):
+        """Get all users with preferences"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id, username, advice_language, advice_tone, created_at FROM users ORDER BY username")
+        columns = [desc[0] for desc in cursor.description]
+        users = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        conn.close()
+        return users
+    
+    def update_user_preferences(self, username, language, tone):
+        """Update user preferences"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("UPDATE users SET advice_language = ?, advice_tone = ? WHERE username = ?",
+                         (language, tone, username))
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error as e:
+            conn.rollback()
+            raise Exception(f"Failed to update preferences: {e}")
+        finally:
+            conn.close()
+    
     def verify_admin(self, username, password):
         """Verify admin credentials"""
         conn = sqlite3.connect(self.db_path)
@@ -359,6 +387,11 @@ class AdminInterface:
         cat_frame = ttk.Frame(notebook)
         notebook.add(cat_frame, text="🏷️ Categories")
         self.create_categories_tab(cat_frame)
+        
+        # Tab 5: User Preferences
+        prefs_frame = ttk.Frame(notebook)
+        notebook.add(prefs_frame, text="👤 User Preferences")
+        self.create_preferences_tab(prefs_frame)
         
         self.main_window.mainloop()
     
@@ -752,6 +785,93 @@ class AdminInterface:
         # Populate tree
         for category, count in sorted(category_counts.items()):
             self.cat_tree.insert("", tk.END, values=(category, count))
+    
+    def create_preferences_tab(self, parent):
+        """Create user preferences management tab"""
+        tk.Label(parent, text="User Preferences Management", font=("Arial", 14, "bold")).pack(pady=10)
+        
+        controls = tk.Frame(parent)
+        controls.pack(pady=10)
+        
+        tk.Button(controls, text="Refresh", command=self.refresh_user_prefs,
+                 bg="#2196F3", fg="white", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
+        
+        tree_frame = tk.Frame(parent)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical")
+        self.prefs_tree = ttk.Treeview(tree_frame, columns=("Username", "Language", "Tone", "Created"),
+                                       show="headings", yscrollcommand=vsb.set)
+        vsb.config(command=self.prefs_tree.yview)
+        
+        self.prefs_tree.heading("Username", text="Username")
+        self.prefs_tree.heading("Language", text="Advice Language")
+        self.prefs_tree.heading("Tone", text="Advice Tone")
+        self.prefs_tree.heading("Created", text="Created At")
+        
+        self.prefs_tree.column("Username", width=150)
+        self.prefs_tree.column("Language", width=150)
+        self.prefs_tree.column("Tone", width=150)
+        self.prefs_tree.column("Created", width=200)
+        
+        self.prefs_tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        
+        tree_frame.grid_rowconfigure(0, weight=1)
+        tree_frame.grid_columnconfigure(0, weight=1)
+        
+        tk.Button(parent, text="Edit Selected User", command=self.edit_user_prefs,
+                 bg="#4CAF50", fg="white", font=("Arial", 11)).pack(pady=10)
+        
+        self.refresh_user_prefs()
+    
+    def refresh_user_prefs(self):
+        """Refresh user preferences list"""
+        for item in self.prefs_tree.get_children():
+            self.prefs_tree.delete(item)
+        
+        users = self.db.get_all_users()
+        for u in users:
+            self.prefs_tree.insert("", tk.END, values=(
+                u['username'],
+                u.get('advice_language', 'en'),
+                u.get('advice_tone', 'friendly'),
+                u.get('created_at', 'N/A')
+            ))
+    
+    def edit_user_prefs(self):
+        """Edit selected user preferences"""
+        selected = self.prefs_tree.selection()
+        if not selected:
+            messagebox.showwarning("Warning", "Select a user first")
+            return
+        
+        values = self.prefs_tree.item(selected[0])['values']
+        username = values[0]
+        
+        dialog = tk.Toplevel(self.main_window)
+        dialog.title(f"Edit Preferences - {username}")
+        dialog.geometry("400x250")
+        
+        tk.Label(dialog, text=f"User: {username}", font=("Arial", 12, "bold")).pack(pady=10)
+        
+        tk.Label(dialog, text="Language:", font=("Arial", 11)).pack(pady=5)
+        lang_var = tk.StringVar(value=values[1])
+        ttk.Combobox(dialog, textvariable=lang_var, values=['en', 'hi', 'es'], state="readonly").pack()
+        
+        tk.Label(dialog, text="Tone:", font=("Arial", 11)).pack(pady=5)
+        tone_var = tk.StringVar(value=values[2])
+        ttk.Combobox(dialog, textvariable=tone_var, values=['professional', 'friendly', 'direct', 'empathetic'], state="readonly").pack()
+        
+        def save():
+            if self.db.update_user_preferences(username, lang_var.get(), tone_var.get()):
+                messagebox.showinfo("Success", "Preferences updated!")
+                self.refresh_user_prefs()
+                dialog.destroy()
+            else:
+                messagebox.showerror("Error", "Failed to update")
+        
+        tk.Button(dialog, text="Save", command=save, bg="#4CAF50", fg="white", width=10).pack(pady=20)
 
 
 def main():
