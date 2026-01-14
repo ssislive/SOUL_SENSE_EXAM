@@ -489,10 +489,16 @@ class JournalFeature:
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.pack(fill="both", expand=True, padx=20)
         
-        # Enable mousewheel scrolling
+        # Enable mousewheel scrolling (scoped to this canvas only)
         def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            try:
+                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except tk.TclError:
+                pass  # Canvas may be destroyed
+        
+        canvas.bind("<MouseWheel>", _on_mousewheel)
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
         
         def render_entries():
             # Clear existing
