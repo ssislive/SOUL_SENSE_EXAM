@@ -61,35 +61,77 @@ class AnalyticsDashboard:
         except Exception:
             return None
         
-    def open_dashboard(self):
-        """Open analytics dashboard with theme support"""
+    def _create_scrollable_frame(self, parent):
+        """Create a consistent scrollable frame for tabs (Hidden Scrollbar)"""
+        container = tk.Frame(parent, bg=self.colors.get("bg", "#FFFFFF"))
+        container.pack(fill="both", expand=True)
+        
+        canvas = tk.Canvas(container, bg=self.colors.get("bg", "#FFFFFF"), highlightthickness=0)
+        scrollable_frame = tk.Frame(canvas, bg=self.colors.get("bg", "#FFFFFF"))
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        # Ensure inner frame fills width
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        def _on_frame_configure(event):
+            # Ensure canvas items exist before config
+            if canvas.find_all():
+                canvas.itemconfig(canvas.find_all()[0], width=event.width)
+        canvas.bind("<Configure>", _on_frame_configure)
+        
+        # NO SCROLLBAR VISIBLE (User Request)
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        # Mousewheel binding - Conditional Scrolling
+        def _on_mousewheel(event):
+            try:
+                # Only scroll if content exceeds view
+                if scrollable_frame.winfo_reqheight() > canvas.winfo_height():
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except: pass
+
+        def _bind(e): 
+            try: canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            except: pass
+        def _unbind(e): 
+            try: canvas.unbind_all("<MouseWheel>")
+            except: pass
+        
+        # Bind only when hovering
+        canvas.bind("<Enter>", _bind)
+        canvas.bind("<Leave>", _unbind)
+        
+        return scrollable_frame
+
+    def render_dashboard(self):
+        """Render dashboard embedded in parent_root"""
         colors = self.colors
         
-        dashboard = tk.Toplevel(self.parent_root)
-        dashboard.title(self.i18n.get("dashboard.title"))
-        dashboard.geometry("950x750")
-        dashboard.configure(bg=colors.get("bg", "#0F172A"))
+        # Use parent_root directly as the container (Embedded Mode)
+        dashboard = self.parent_root
         
-        # Header
-        header = tk.Frame(dashboard, bg=colors.get("primary", "#3B82F6"))
-        header.pack(fill="x")
+        # Header (Hero Style for Web feel)
+        header_frame = tk.Frame(dashboard, bg=colors["bg"], pady=20)
+        header_frame.pack(fill="x", padx=20)
         
-        tk.Label(
-            header,
-            text=f"📊 {self.i18n.get('dashboard.analytics')}", 
-            font=("Segoe UI", 18, "bold"),
-            bg=colors.get("primary", "#3B82F6"),
-            fg="white"
-        ).pack(pady=15)
-        
+        tk.Label(header_frame, text=f"📊 {self.i18n.get('dashboard.analytics')}", 
+                font=("Segoe UI", 24, "bold"), bg=colors["bg"], 
+                fg=colors["text_primary"]).pack(side="left")
+
         # Configure ttk style for dark/light theme
         style = ttk.Style()
         if self.theme == "dark":
             style.configure("TNotebook", background=colors.get("bg", "#0F172A"))
             style.configure("TFrame", background=colors.get("bg", "#0F172A"))
+            style.map("TNotebook.Tab", background=[("selected", colors.get("surface", "#1E293B"))], 
+                      foreground=[("selected", colors.get("text_primary", "#fff"))])
         
         notebook = ttk.Notebook(dashboard)
-        notebook.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=20, pady=(10, 20))
         
         # Correlation Analysis Tab
         correlation_frame = ttk.Frame(notebook)
@@ -134,6 +176,7 @@ class AnalyticsDashboard:
         
     def show_satisfaction_analytics(self, parent):
         """Show satisfaction analytics"""
+        parent = self._create_scrollable_frame(parent)
         # Fetch satisfaction data
         session = get_session()
         try:
@@ -251,6 +294,7 @@ class AnalyticsDashboard:
     # ========== NEW CORRELATION ANALYSIS METHOD ==========
     def show_correlation_analysis(self, parent):
         """Show correlation analysis between EQ scores"""
+        parent = self._create_scrollable_frame(parent)
         # Title
         tk.Label(parent, text=self.i18n.get("dashboard.correlation_title"), 
                 font=("Arial", 16, "bold")).pack(pady=10)
@@ -467,6 +511,7 @@ class AnalyticsDashboard:
     # ========== EXISTING METHODS (UPDATED) ==========
     def show_eq_trends(self, parent):
         """Show EQ score trends with matplotlib graph"""
+        parent = self._create_scrollable_frame(parent)
         # Set colors
         colors = self.colors
         bg_color = colors.get("bg", "#F8FAFC")
@@ -475,7 +520,7 @@ class AnalyticsDashboard:
         text_secondary = colors.get("text_secondary", "#64748B")
         
         # Configure parent
-        parent.configure(style="TFrame")
+        # parent.configure(style="TFrame")
         
         conn = get_connection()
         cursor = conn.cursor()
@@ -769,6 +814,7 @@ class AnalyticsDashboard:
 
     def show_journal_analytics(self, parent):
         """Show journal analytics"""
+        parent = self._create_scrollable_frame(parent)
         conn = get_connection() # Use centralized connection logic
         cursor = conn.cursor()
         
@@ -834,6 +880,7 @@ class AnalyticsDashboard:
         
     def show_insights(self, parent):
         """Show personalized insights"""
+        parent = self._create_scrollable_frame(parent)
         tk.Label(parent, text="🔍 Your Insights", font=("Arial", 14, "bold")).pack(pady=10)
         
         insights_text = tk.Text(parent, wrap=tk.WORD, font=("Arial", 11), bg="#f8f9fa")
@@ -849,6 +896,7 @@ class AnalyticsDashboard:
     # ========== EMOTIONAL PROFILE CLUSTERING TAB ==========
     def show_emotional_profile(self, parent):
         """Show emotional profile clustering analysis."""
+        parent = self._create_scrollable_frame(parent)
         if not CLUSTERING_AVAILABLE:
             tk.Label(parent, text="❌ Clustering module not available", 
                     font=("Arial", 14)).pack(pady=50)
@@ -1094,6 +1142,7 @@ class AnalyticsDashboard:
     # ========== WELLBEING ANALYTICS (PR 1.5) ==========
     def show_wellbeing_analytics(self, parent):
         """Show wellbeing analytics (Sleep vs Mood, Work vs Mood)"""
+        parent = self._create_scrollable_frame(parent)
         # Fetch Data
         conn = get_connection()
         cursor = conn.cursor()

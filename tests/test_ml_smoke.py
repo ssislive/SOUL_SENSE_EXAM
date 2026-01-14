@@ -1,89 +1,56 @@
 import pytest
 from unittest.mock import MagicMock
 import sys
+import os
 
-# Mock modules to avoid loading heavy dependencies or missing files
-# This is a "smoke test" to ensure the class structure is reachable
-from app.ml.predictor import SoulSenseMLPredictor
+# Update import to point to the actual class
+from app.ml.risk_predictor import RiskPredictor
 
 def test_ml_predictor_import():
     """Verify the class is importable"""
-    assert SoulSenseMLPredictor is not None
+    assert RiskPredictor is not None
 
 def test_ml_predictor_initialization_mocked(mocker):
     """
     Verify initialization doesn't crash if dependencies are mocked.
-    This simulates the app startup environment.
     """
-    # Mock OS/FileSystem to avoid real reads/writes
-    mocker.patch("os.path.exists", return_value=False) # Force 'training new model' path
-    mocker.patch("os.makedirs")
-    
-    # Mock Joblib to avoid disk I/O
-    mocker.patch("joblib.load")
-    mocker.patch("joblib.dump")
-    
-    # Mock pickle and open to prevent file writes and pickling errors
-    mocker.patch("pickle.dump")
-    mocker.patch("builtins.open", new_callable=mocker.mock_open)
-    
-    # Mock Versioning Manager to avoid 'models/metadata.json' reads
-    mocker.patch("app.ml.predictor.create_versioning_manager", return_value=MagicMock())
+    # Mock glob to return empty list or specific files
+    mocker.patch("glob.glob", return_value=[])
     
     try:
-        predictor = SoulSenseMLPredictor(use_versioning=True)
-        # Should initialize
+        predictor = RiskPredictor(models_dir="mock_models")
         assert predictor is not None
-        assert predictor.model is not None # Should have trained sample model
+        # Model should be None if no files found
+        assert predictor.model is None
     except Exception as e:
-        pytest.fail(f"ML Predictor initialized failed: {e}")
+        pytest.fail(f"ML Predictor initialization failed: {e}")
 
 def test_predict_smoke(mocker):
     """Verify predict method returns expected structure (mocked model)"""
-    mocker.patch("os.path.exists", return_value=True) # Pretend model exists
-    mocker.patch("app.ml.predictor.create_versioning_manager", return_value=MagicMock())
+    # Mock glob to find a file
+    mocker.patch("glob.glob", return_value=["models/risk_model_v1.pkl"])
+    mocker.patch("os.path.getctime", return_value=1234567890)
     
-    # Mock joblib load (unused but good practice if mixed)
-    mocker.patch("joblib.load")
-    
-    # Mock pickle load to return a dummy model dictionary
+    # Mock joblib load
     mock_model = MagicMock()
-    mock_model.predict.return_value = [1] # Moderate Risk (index 1)
-    mock_model.predict_proba.return_value = [[0.1, 0.8, 0.1]]
-    mock_model.classes_ = ['Low Risk', 'Moderate Risk', 'High Risk']
+    mock_model.predict.return_value = ["Low Risk"]
+    mock_model.predict_proba.return_value = [[0.9, 0.1, 0.0]]
     
-    mock_scaler = MagicMock()
-    mock_scaler.transform.return_value = [[0]*9] # 9 features
+    mocker.patch("joblib.load", return_value=mock_model)
     
-    dummy_model_data = {
-        'model': mock_model,
-        'scaler': mock_scaler,
-        'feature_names': [
-            'emotional_recognition', 'emotional_understanding', 'emotional_regulation',
-            'emotional_reflection', 'social_awareness', 'total_score', 'age',
-            'average_score', 'sentiment_score'
-        ],
-        'class_names': ['Low Risk', 'Moderate Risk', 'High Risk'],
-        'version': '0.1.0'
-    }
+    predictor = RiskPredictor(models_dir="models")
     
-    mocker.patch("pickle.load", return_value=dummy_model_data)
-    mocker.patch("builtins.open", new_callable=mocker.mock_open)
+    # Test predict
+    label = predictor.predict(total_score=10, sentiment_score=0.5, age=25)
+    assert label == "Low Risk"
     
-    predictor = SoulSenseMLPredictor(use_versioning=False)
+    # Test predict_with_explanation
+    result = predictor.predict_with_explanation(
+        responses=[], 
+        age=25, 
+        total_score=10, 
+        sentiment_score=0.5
+    )
     
-    # Verify model was loaded from our mock
-    assert predictor.model == mock_model
-    
-    # Dummy input
-    result = predictor.prepare_features([3,3,3,3,3], 25, 15)
-    # Actually call predict_score or similar public method?
-    # predictor.py doesn't have predict_score shown in snippet? 
-    # Check snippet line 80: prepare_features.
-    # Needs a real predict method. Assuming 'predict_risk' or similar exists.
-    # Checking file content again, I only saw prepare_features.
-    # I'll verify if predict_risk exists in next step if this fails.
-    # For now, let's just verify prepare_features works.
-    
-    features, _ = predictor.prepare_features([3,3,3,3,3], 25, 15)
-    assert features.shape == (1, 9)
+    assert result["prediction_label"] == "Low Risk"
+    assert result["confidence"] == 0.9

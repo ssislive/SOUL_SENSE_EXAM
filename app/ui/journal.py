@@ -32,13 +32,14 @@ class JournalFeature:
         self.i18n = get_i18n()
         
         # Initialize theme colors (with defaults)
+        # Initialize theme colors (standardized)
         self.colors = {
-            "bg_primary": "#f0f0f0",
-            "bg_secondary": "#f5f5f5",
+            "bg": "#f0f0f0",
             "surface": "white",
             "text_primary": "black",
             "text_secondary": "#666",
-            "secondary": "#8B5CF6"
+            "primary": "#8B5CF6",
+            "secondary": "#EC4899"
         }
         
         # Use app colors if available
@@ -61,114 +62,105 @@ class JournalFeature:
             logging.error(f"Failed to initialize sentiment analyzer: {e}")
             self.sia = None
 
+    def render_journal_view(self, parent_frame, username):
+        """Render journal view inside a parent frame (Embedded Mode)"""
+        self.username = username
+        self.journal_window = parent_frame # Alias for compatibility
+        
+        # Determine colors
+        colors = self.colors
+        
+        # Header Section
+        header_frame = tk.Frame(parent_frame, bg=colors["bg"], pady=10)
+        header_frame.pack(fill="x")
+        
+        tk.Label(header_frame, text=self.i18n.get("journal.title"), 
+                 font=("Segoe UI", 24, "bold"), bg=colors["bg"], 
+                 fg=colors["text_primary"]).pack(anchor="w", padx=20)
+                 
+        today = datetime.now().strftime("%Y-%m-%d")
+        tk.Label(header_frame, text=self.i18n.get("journal.date", date=today), 
+                 font=("Segoe UI", 12), bg=colors["bg"], 
+                 fg=colors["text_secondary"]).pack(anchor="w", padx=20)
+
+        # Scrollable Content
+        container = tk.Frame(parent_frame, bg=colors["bg"])
+        container.pack(fill="both", expand=True, padx=20)
+        
+        # --- Metrics Section ---
+        metrics_frame = tk.LabelFrame(container, text="Daily Assessment", 
+                                     font=("Segoe UI", 12, "bold"), bg=colors["surface"],
+                                     fg=colors["text_primary"], padx=15, pady=15)
+        metrics_frame.pack(fill="x", pady=10)
+        
+        metrics_frame.columnconfigure(1, weight=1)
+        metrics_frame.columnconfigure(3, weight=1)
+        
+        def create_slider(parent, label_text, from_, to_, row, col, variable, resolution=1):
+            lbl = tk.Label(parent, text=label_text, font=("Segoe UI", 11), 
+                    bg=colors["surface"], fg=colors["text_primary"])
+            lbl.grid(row=row, column=col, padx=10, pady=5, sticky="w")
+            
+            val_lbl = tk.Label(parent, text=f"{variable.get():g}", width=4, font=("Segoe UI", 11, "bold"),
+                              bg=colors["surface"], fg=colors["primary"])
+            val_lbl.grid(row=row, column=col+2, padx=5)
+            
+            def on_scroll(val):
+                v = float(val)
+                v = int(v) if resolution==1 else round(v, 1)
+                variable.set(v)
+                val_lbl.config(text=f"{v:g}")
+
+            s = ttk.Scale(parent, from_=from_, to=to_, orient="horizontal", variable=variable, command=on_scroll)
+            s.grid(row=row, column=col+1, sticky="ew", padx=5)
+
+        # Row 0
+        self.sleep_hours_var = tk.DoubleVar(value=7.0)
+        create_slider(metrics_frame, "Sleep (hrs)", 0, 16, 0, 0, self.sleep_hours_var, 0.5)
+
+        self.sleep_quality_var = tk.IntVar(value=7)
+        create_slider(metrics_frame, "Sleep Quality (1-10)", 1, 10, 0, 3, self.sleep_quality_var, 1)
+        
+        # Row 1
+        self.energy_level_var = tk.IntVar(value=7)
+        create_slider(metrics_frame, "Energy (1-10)", 1, 10, 1, 0, self.energy_level_var, 1)
+        
+        self.work_hours_var = tk.DoubleVar(value=8.0)
+        create_slider(metrics_frame, "Work (hrs)", 0, 16, 1, 3, self.work_hours_var, 0.5)
+
+        # --- Reflection Section ---
+        tk.Label(container, text="Your thoughts today...", 
+                font=("Segoe UI", 12, "bold"), bg=colors["bg"], 
+                fg=colors["text_primary"]).pack(anchor="w", pady=(15, 5))
+        
+        self.text_area = scrolledtext.ScrolledText(container, width=60, height=8, 
+                                                  font=("Segoe UI", 11),
+                                                  bg=colors["surface"], fg=colors["text_primary"],
+                                                  relief="flat", highlightthickness=1,
+                                                  highlightbackground=colors.get("border", "#ccc"))
+        self.text_area.pack(fill="x", expand=True)
+        
+        # Buttons
+        btn_frame = tk.Frame(container, bg=colors["bg"])
+        btn_frame.pack(fill="x", pady=20)
+        
+        tk.Button(btn_frame, text="Save Entry", command=self.save_and_analyze,
+                 font=("Segoe UI", 11, "bold"), bg=colors["primary"], fg=colors.get("text_inverse", "white"),
+                 padx=20, pady=8, relief="flat").pack(side="right")
+                 
+        if hasattr(self.app, 'switch_view'):
+             tk.Button(btn_frame, text="Cancel", command=lambda: self.app.switch_view('home'),
+                     font=("Segoe UI", 11), bg=colors["bg"], fg=colors["text_secondary"],
+                     relief="flat").pack(side="right", padx=10)
+
     def open_journal_window(self, username):
-        """Open the journal window"""
+        """Standalone Window Mode (Deprecated but kept for compat)"""
         self.username = username
         self.journal_window = tk.Toplevel(self.parent_root)
         self.journal_window.title(self.i18n.get("journal.title"))
-        self.journal_window.geometry("600x500")
-        self.journal_window.configure(bg=self.colors["bg_primary"])
-        
-        # Title
-        tk.Label(self.journal_window, text=self.i18n.get("journal.daily_reflection"), 
-                font=("Arial", 16, "bold"), bg=self.colors["bg_primary"], 
-                fg=self.colors["text_primary"]).pack(pady=10)
-        
-        # Date display
-        today = datetime.now().strftime("%Y-%m-%d")
-        tk.Label(self.journal_window, text=self.i18n.get("journal.date", date=today), 
-                font=("Arial", 12), bg=self.colors["bg_primary"], 
-                fg=self.colors["text_secondary"]).pack(pady=5)
-        
-        # --- Metrics Section ---
-        metrics_container = tk.Frame(self.journal_window, bg=self.colors["bg_primary"])
-        metrics_container.pack(fill=tk.X, padx=20, pady=5)
-                           
-        metrics_frame = tk.LabelFrame(metrics_container, text=self.i18n.get("journal.metrics_title"), 
-                                     font=("Arial", 14, "bold"), bg=self.colors["surface"],
-                                     fg=self.colors["text_primary"])
-        metrics_frame.pack(anchor=tk.CENTER, ipadx=50, pady=5)
-        
-        # Grid Configuration
-        metrics_frame.columnconfigure((1, 3), weight=1)
-        
-        def create_slider(parent, label_text, from_, to_, row, col, variable, resolution=1):
-            # Label
-            tk.Label(parent, text=label_text, font=("Arial", 12), 
-                    bg=self.colors["surface"], fg=self.colors["text_primary"]).grid(
-                    row=row, column=col, padx=10, pady=8, sticky="w")
-            
-            # Container for Slider + Value Label
-            container = tk.Frame(parent, bg=self.colors["surface"])
-            container.grid(row=row, column=col+1, padx=10, pady=8, sticky="ew")
-            
-            # Value Label (Updates dynamically)
-            val_label = tk.Label(container, text=f"{variable.get():g}", width=4, 
-                                font=("Arial", 12, "bold"), bg=self.colors["surface"],
-                                fg=self.colors["text_primary"])
-            val_label.pack(side=tk.RIGHT)
-            
-            # Slider command
-            def on_scroll(val):
-                v = float(val)
-                if resolution == 1: 
-                    v = int(v)
-                else: 
-                    v = round(v, 1)
-                variable.set(v)
-                val_label.config(text=f"{v:g}")
-
-            # Slider
-            scale = ttk.Scale(container, from_=from_, to=to_, orient="horizontal", 
-                             variable=variable, command=on_scroll)
-            scale.pack(side=tk.LEFT, fill=tk.X, expand=True)
-
-        # Row 0: Sleep Duration & Quality
-        self.sleep_hours_var = tk.DoubleVar(value=7.0)
-        create_slider(metrics_frame, self.i18n.get("journal.sleep_hours"), 0, 16, 0, 0, self.sleep_hours_var, 0.5)
-
-        self.sleep_quality_var = tk.IntVar(value=7)
-        create_slider(metrics_frame, self.i18n.get("journal.sleep_quality"), 1, 10, 0, 2, self.sleep_quality_var, 1)
-        
-        # Row 1: Energy & Work
-        self.energy_level_var = tk.IntVar(value=7)
-        create_slider(metrics_frame, self.i18n.get("journal.energy_level"), 1, 10, 1, 0, self.energy_level_var, 1)
-        
-        self.work_hours_var = tk.DoubleVar(value=8.0)
-        create_slider(metrics_frame, self.i18n.get("journal.work_hours"), 0, 16, 1, 2, self.work_hours_var, 0.5)
-        # ------------------------------------------------
-        
-        # Text area for journal entry
-        tk.Label(self.journal_window, text=self.i18n.get("journal.write_reflection"), 
-                font=("Arial", 12), bg=self.colors["bg_primary"], 
-                fg=self.colors["text_primary"]).pack(pady=(10,5))
-        
-        self.text_area = scrolledtext.ScrolledText(self.journal_window, 
-                                                  width=70, height=15, 
-                                                  font=("Arial", 11),
-                                                  bg=self.colors["surface"],
-                                                  fg=self.colors["text_primary"])
-        self.text_area.pack(pady=10, padx=20)
-        
-        # Buttons
-        button_frame = tk.Frame(self.journal_window, bg=self.colors["bg_primary"])
-        button_frame.pack(pady=10)
-        
-        tk.Button(button_frame, text=self.i18n.get("journal.save_analyze"), 
-                 command=self.save_and_analyze, 
-                 font=("Arial", 12), bg="#4CAF50", fg="white").pack(side=tk.LEFT, padx=5)
-        
-        tk.Button(button_frame, text=self.i18n.get("journal.view_past"), 
-                 command=self.view_past_entries, 
-                 font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
-        
-        tk.Button(button_frame, text=self.i18n.get("journal.dashboard"), 
-                 command=self.open_dashboard, 
-                 font=("Arial", 12), bg="#FF9800", fg="white").pack(side=tk.LEFT, padx=5)
-        
-        tk.Button(button_frame, text=self.i18n.get("journal.close"), 
-                 command=self.journal_window.destroy, 
-                 font=("Arial", 12)).pack(side=tk.LEFT, padx=5)
+        self.journal_window.geometry("800x600")
+        self.journal_window.configure(bg=self.colors.get("bg"))
+        self.render_journal_view(self.journal_window, username)
     
     def analyze_sentiment(self, text):
         """Analyze sentiment using NLTK VADER"""
@@ -282,7 +274,7 @@ class JournalFeature:
     def show_analysis_results(self, sentiment_score, patterns, nudge_advice=None):
         """Display AI analysis results"""
         # Use stored colors
-        bg_color = self.colors.get("bg_secondary", "#f5f5f5")
+        bg_color = self.colors.get("bg", "#f5f5f5")
         card_bg = self.colors.get("surface", "white")
         text_color = self.colors.get("text_primary", "black")
         subtext_color = self.colors.get("text_secondary", "#666")

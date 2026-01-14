@@ -66,18 +66,31 @@ class DailyHistoryView:
 
         # --- Main Layout (Scrollable) ---
         self.canvas = tk.Canvas(self.parent, bg=self.colors["bg"], highlightthickness=0)
-        self.scrollbar = ttk.Scrollbar(self.parent, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = tk.Frame(self.canvas, bg=self.colors["bg"])
         
         self.scrollable_frame.bind(
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw", width=980) # Fixed width prevents squash
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
+        # Create Window
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw", width=980)
+        
+        # Pack Canvas (Hidden Scrollbar)
         self.canvas.pack(side="left", fill="both", expand=True, padx=10)
-        self.scrollbar.pack(side="right", fill="y")
+        
+        # Conditional Mousewheel
+        def _on_mousewheel(event):
+            try:
+                if self.scrollable_frame.winfo_reqheight() > self.canvas.winfo_height():
+                    self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            except: pass
+
+        def _bind(e): self.canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        def _unbind(e): self.canvas.unbind_all("<MouseWheel>")
+        
+        self.canvas.bind("<Enter>", _bind)
+        self.canvas.bind("<Leave>", _unbind)
         
         # Container Frames
         self.cards_container = tk.Frame(self.scrollable_frame, bg=self.colors["bg"])
@@ -112,14 +125,15 @@ class DailyHistoryView:
         self.create_metric_btn(sidebar, "⚡ Energy Level", "energy", "#F59E0B")
         self.create_metric_btn(sidebar, "💼 Work Hours", "work", "#10B981")
         
-        # Chart Area
-        self.fig = Figure(figsize=(7, 3.5), dpi=100)
+        # Chart Area (Fixed Size)
+        self.fig = Figure(figsize=(7, 4), dpi=100) # Slightly taller for clarity
         self.fig.patch.set_facecolor(self.colors["surface"])
         self.ax = self.fig.add_subplot(111)
         self.ax.set_facecolor(self.colors["surface"])
         
         self.chart_canvas = FigureCanvasTkAgg(self.fig, content)
-        self.chart_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # expand=False keeps size consistent as per user request
+        self.chart_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=False, padx=10)
 
     def create_metric_btn(self, parent, text, metric_key, color):
         btn = tk.Button(parent, text=text, font=("Segoe UI", 10, "bold"),

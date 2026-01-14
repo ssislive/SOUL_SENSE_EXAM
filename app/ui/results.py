@@ -318,14 +318,12 @@ class ResultsManager:
         main_frame = tk.Frame(self.app.root, bg=colors.get("bg", "#0F172A"))
         main_frame.pack(fill="both", expand=True)
         
-        # Create scrollable canvas
+        # Create scrollable canvas (Hidden Scrollbar)
         canvas = tk.Canvas(main_frame, bg=colors.get("bg", "#0F172A"), highlightthickness=0)
-        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollable = tk.Frame(canvas, bg=colors.get("bg", "#0F172A"))
         
         # Create window and store its ID for resizing
         canvas_window = canvas.create_window((0, 0), window=scrollable, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
         
         # Responsive: Update canvas width when window resizes
         def on_canvas_configure(event):
@@ -334,14 +332,26 @@ class ResultsManager:
         
         scrollable.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         
-        # Safe mouse wheel binding
+        # Robust mouse wheel binding (Conditional)
         def _on_mousewheel(event):
             try:
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                if canvas.winfo_exists():
+                    # Only scroll if content > view
+                    if scrollable.winfo_reqheight() > canvas.winfo_height():
+                        canvas.yview_scroll(int(-1*(event.delta/120)), "units")
             except:
                 pass
-        canvas.bind("<MouseWheel>", _on_mousewheel)
-        scrollable.bind("<MouseWheel>", _on_mousewheel)
+
+        def _bind_mouse(event):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
+            
+        def _unbind_mouse(event):
+            canvas.unbind_all("<MouseWheel>")
+
+        canvas.bind("<Enter>", _bind_mouse)
+        canvas.bind("<Leave>", _unbind_mouse)
+        scrollable.bind("<Enter>", _bind_mouse)
+        scrollable.bind("<Leave>", _unbind_mouse)
         
         # ===== HEADER BAR with Menu Button =====
         header_bar = tk.Frame(scrollable, bg="#22C55E")
@@ -547,9 +557,8 @@ class ResultsManager:
             width=20, pady=8
         ).pack(pady=(25, 40))
         
-        # Pack canvas and scrollbar
+        # Pack canvas (Hidden Scrollbar)
         canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
     
     def _lighten(self, color):
         """Lighten a hex color"""
@@ -577,19 +586,18 @@ class ResultsManager:
         
         colors = self.app.colors
         
-        # Scrollable container
+        # Scrollable container (Hidden Scrollbar)
         canvas = tk.Canvas(detail_win, bg=colors.get("bg", "#0F172A"), highlightthickness=0)
-        scrollbar = tk.Scrollbar(detail_win, orient="vertical", command=canvas.yview)
         scrollable = tk.Frame(canvas, bg=colors.get("bg", "#0F172A"))
         
         scrollable.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable, anchor="nw", width=780)
-        canvas.configure(yscrollcommand=scrollbar.set)
         
-        # Mouse wheel - bind only to this window's widgets
+        # Mouse wheel - bind only to this window's widgets (Conditional)
         def _on_mousewheel(event):
             try:
-                canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+                if scrollable.winfo_reqheight() > canvas.winfo_height():
+                    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
             except:
                 pass
         
@@ -646,7 +654,6 @@ class ResultsManager:
         ).pack(pady=20)
         
         canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
     
     def _create_progress_section(self, parent, colors):
         """Create EQ progress bar section"""

@@ -11,6 +11,7 @@ from app.ui.sidebar import SidebarNav
 from app.ui.components.timeline import LifeTimeline
 from app.ui.components.tag_input import TagInput
 from tkcalendar import DateEntry
+from app.ui.settings import SettingsManager
 
 class UserProfileView:
     def __init__(self, parent_root, app_instance):
@@ -19,17 +20,13 @@ class UserProfileView:
         self.i18n = app_instance.i18n
         self.colors = app_instance.colors
         
-        # Window Setup
-        self.window = tk.Toplevel(parent_root)
-        self.window.title(self.i18n.get("profile.title"))
-        self.window.geometry("1100x750") # Wider for sidebar
-        self.window.configure(bg=self.colors.get("bg_secondary", "#F1F5F9"))
-        
-        # Center the window
-        self.center_window()
+        # Embedded View Setup
+        # self.window was Toplevel, now we use parent_root (which is content_area)
+        self.window = parent_root 
         
         # Main Layout Container
-        self.main_container = tk.Frame(self.window, bg=self.colors.get("bg_secondary"))
+        # Force background to match main theme
+        self.main_container = tk.Frame(self.window, bg=self.colors.get("bg"))
         self.main_container.pack(fill="both", expand=True)
         
         # --- LEFT SIDEBAR ---
@@ -37,6 +34,7 @@ class UserProfileView:
             self.main_container, 
             self.app,
             items=[
+                {"id": "back", "icon": "←", "label": "Back to Home"},
                 {"id": "medical", "icon": "🏥", "label": self.i18n.get("profile.tab_medical")},
                 {"id": "history", "icon": "📜", "label": "Personal History"},
                 {"id": "strengths", "icon": "💪", "label": "Strengths & Goals"}, # New Tab
@@ -47,30 +45,30 @@ class UserProfileView:
         self.sidebar.pack(side="left", fill="y")
         
         # --- RIGHT CONTENT AREA ---
-        self.content_area = tk.Frame(self.main_container, bg=self.colors.get("bg_secondary"))
-        self.content_area.pack(side="left", fill="both", expand=True, padx=30, pady=30)
+        self.content_area = tk.Frame(self.main_container, bg=self.colors.get("bg"))
+        self.content_area.pack(side="left", fill="both", expand=True, padx=30, pady=0)
         
         # Header (Top of Content Area)
         self.header_label = tk.Label(
             self.content_area,
             text="Profile",
             font=("Segoe UI", 24, "bold"),
-            bg=self.colors.get("bg_secondary"),
+            bg=self.colors.get("bg"),
             fg=self.colors.get("text_primary")
         )
         self.header_label.pack(anchor="w", pady=(0, 20))
         
         # Content Dynamic Frame with Scrollbar
-        container_frame = tk.Frame(self.content_area, bg=self.colors.get("bg_secondary"))
+        container_frame = tk.Frame(self.content_area, bg=self.colors.get("bg"))
         container_frame.pack(fill="both", expand=True)
 
-        self.canvas = tk.Canvas(container_frame, bg=self.colors.get("bg_secondary"), highlightthickness=0)
+        self.canvas = tk.Canvas(container_frame, bg=self.colors.get("bg"), highlightthickness=0)
         
         # User requested hidden scrollbars but functional scrolling
         self.scrollbar = ttk.Scrollbar(container_frame, orient="vertical", command=self.canvas.yview)
         # self.scrollbar.pack(side="right", fill="y") # HIDDEN as requested
         
-        self.view_container = tk.Frame(self.canvas, bg=self.colors.get("bg_secondary"))
+        self.view_container = tk.Frame(self.canvas, bg=self.colors.get("bg"))
         
         self.canvas_window = self.canvas.create_window((0, 0), window=self.view_container, anchor="nw")
         
@@ -132,6 +130,10 @@ class UserProfileView:
         # FORCE SCROLL RESET: Reset to top
         self.canvas.yview_moveto(0)
             
+        if view_id == "back":
+            self.app.switch_view("home")
+            return
+
         if view_id == "medical":
             self.header_label.configure(text=self.i18n.get("profile.header", name=self.app.username))
             self._render_medical_view()
@@ -143,7 +145,7 @@ class UserProfileView:
             self._render_strengths_view()
         elif view_id == "settings":
             self.header_label.configure(text="Account Settings")
-            self._render_settings_view()
+            self._render_settings_view(self.view_container)
 
     # ==========================
     # 1. MEDICAL VIEW
@@ -202,6 +204,13 @@ class UserProfileView:
         
         self._create_field_label(right_col, self.i18n.get("profile.conditions"))
         self.conditions_text = self._create_text_area(right_col)
+        
+        # --- PR #5: Surgeries & Therapy ---
+        self._create_field_label(right_col, "Surgery History")
+        self.surgeries_text = self._create_text_area(right_col)
+        
+        self._create_field_label(right_col, "Therapy History (Private 🔒)")
+        self.therapy_text = self._create_text_area(right_col)
 
         # Footer Actions (Save Button)
         footer = tk.Frame(card, bg=self.colors.get("card_bg"), height=80)
@@ -233,11 +242,11 @@ class UserProfileView:
     # ==========================
     def _render_history_view(self):
         # Responsive Split: Left (Form) | Right (Timeline)
-        paned = tk.PanedWindow(self.view_container, orient=tk.HORIZONTAL, bg=self.colors.get("bg_secondary"), sashwidth=4, sashrelief="flat")
+        paned = tk.PanedWindow(self.view_container, orient=tk.HORIZONTAL, bg=self.colors.get("bg"), sashwidth=4, sashrelief="flat")
         paned.pack(fill="both", expand=True)
         
         # --- LEFT COLUMN: Form ---
-        left_col = tk.Frame(paned, bg=self.colors.get("bg_secondary"))
+        left_col = tk.Frame(paned, bg=self.colors.get("bg"))
         # Add to pane
         paned.add(left_col, width=350, minsize=250, sticky="nsew", padx=0) # padx tuple not supported in PanedWindow add
         
@@ -264,7 +273,15 @@ class UserProfileView:
         self.status_combo.pack(fill="x", pady=5)
         
         self._create_field_label(form_content, "Bio")
+        self._create_field_label(form_content, "Bio")
         self.bio_text = self._create_text_area(form_content)
+
+        # --- PR #5: Society Contribution & Life POV ---
+        self._create_field_label(form_content, "Contribution to Society")
+        self.society_text = self._create_text_area(form_content)
+
+        self._create_field_label(form_content, "Perspective on Life")
+        self.life_pov_text = self._create_text_area(form_content)
         
         # Save Button for Profile Details
         save_profile_btn = tk.Button(
@@ -275,7 +292,7 @@ class UserProfileView:
         save_profile_btn.pack(fill="x", pady=20)
 
         # --- RIGHT COLUMN: Timeline ---
-        right_col = tk.Frame(paned, bg=self.colors.get("bg_secondary"))
+        right_col = tk.Frame(paned, bg=self.colors.get("bg"))
         paned.add(right_col, minsize=400, sticky="nsew", padx=0)
         
         # Timeline Component
@@ -393,7 +410,12 @@ class UserProfileView:
                 self.occ_var.set(profile.occupation or "")
                 self.edu_var.set(profile.education or "")
                 self.status_var.set(profile.marital_status or "")
+                self.status_var.set(profile.marital_status or "")
                 self.bio_text.insert("1.0", profile.bio or "")
+
+                # PR #5 Load
+                self.society_text.insert("1.0", profile.society_contribution or "")
+                self.life_pov_text.insert("1.0", profile.life_pov or "")
                 
                 # Load events
                 if profile.life_events:
@@ -421,7 +443,12 @@ class UserProfileView:
              profile.occupation = self.occ_var.get()
              profile.education = self.edu_var.get()
              profile.marital_status = self.status_var.get()
+             profile.marital_status = self.status_var.get()
              profile.bio = self.bio_text.get("1.0", tk.END).strip()
+
+             # PR #5 Save
+             profile.society_contribution = self.society_text.get("1.0", tk.END).strip()
+             profile.life_pov = self.life_pov_text.get("1.0", tk.END).strip()
              
              session.commit()
              session.close()
@@ -449,23 +476,116 @@ class UserProfileView:
             logging.error(f"Error saving events: {e}")
             messagebox.showerror("Error", "Failed to save events.")
 
-    def _render_settings_view(self):
-        # Placeholder for settings
-        tk.Label(self.view_container, text="Settings coming soon...", font=("Segoe UI", 14), bg=self.colors.get("bg_secondary"), fg="gray").pack(pady=50)
+    def _render_settings_view(self, parent):
+        """Render embedded settings view"""
+        # Header
+        self._create_section_label(parent, "Application Settings")
+        
+        # We can reuse logic from SettingsManager but render into 'parent'
+        # Instead of full rewrite, let's instantiate SettingsManager and use its internal methods if possible,
+        # OR just simpler: reimplement the sections here using the parent frame.
+        # Reimplementing is safer for layout control.
+        colors = self.colors
+        
+        # Theme Section
+        self._create_field_label(parent, "Theme")
+        theme_frame = tk.Frame(parent, bg=colors.get("card_bg", "white"))
+        theme_frame.pack(fill="x", pady=5)
+        
+        current_theme = self.app.settings.get("theme", "light")
+        self.theme_var = tk.StringVar(value=current_theme)
+        
+        def on_theme_change():
+            new_theme = self.theme_var.get()
+            self.app.settings["theme"] = new_theme
+            self.app.apply_theme(new_theme)
+            # View is reloaded by apply_theme, so we stop here.
+            return
+
+        tk.Radiobutton(
+            theme_frame, 
+            text="☀ Light", 
+            variable=self.theme_var, 
+            value="light", 
+            command=on_theme_change, 
+            bg=colors.get("card_bg", "white"), 
+            fg=colors.get("text_primary"),
+            selectcolor=colors.get("primary_light", "#DBEAFE"),
+            activebackground=colors.get("card_bg", "white"), # Keep same as bg to avoid flash
+            activeforeground=colors.get("primary", "blue")
+        ).pack(side="left", padx=10)
+        
+        tk.Radiobutton(
+            theme_frame, 
+            text="🌙 Dark", 
+            variable=self.theme_var, 
+            value="dark", 
+            command=on_theme_change, 
+            bg=colors.get("card_bg", "white"), 
+            fg=colors.get("text_primary"),
+            selectcolor=colors.get("primary_light", "#DBEAFE"), # Use light color for indicator even in dark mode for contrast? 
+            # OR better: use primary.
+            # in dark mode: selectcolor="#3B82F6" (Primary Blue).
+            activebackground=colors.get("card_bg", "white"),
+            activeforeground=colors.get("primary", "blue")
+        ).pack(side="left", padx=10)
+
+        # Question Count Section
+        self._create_field_label(parent, "Questions per Session")
+        
+        current_count = self.app.settings.get("question_count", 10)
+        self.qcount_var = tk.IntVar(value=current_count)
+        
+        spinbox = tk.Spinbox(parent, from_=5, to=50, textvariable=self.qcount_var, width=10, font=("Segoe UI", 12))
+        spinbox.pack(anchor="w", pady=5)
+        
+        # Save Button
+        tk.Button(parent, text="Save Preferences", 
+                 command=self._save_settings,
+                 bg=colors.get("primary"), fg="white", font=("Segoe UI", 12), pady=5).pack(pady=20, anchor="w")
+
+    def _save_settings(self):
+        """Save settings to DB"""
+        new_settings = {
+            "theme": self.theme_var.get(),
+            "question_count": self.qcount_var.get(),
+            "sound_enabled": True # Default for now
+        }
+        
+        self.app.settings.update(new_settings)
+        
+        # Save via DB helper if possible
+        if hasattr(self.app, 'current_user_id') and self.app.current_user_id:
+             try:
+                from app.db import update_user_settings
+                update_user_settings(self.app.current_user_id, **new_settings)
+                tk.messagebox.showinfo("Success", "Settings saved!")
+             except Exception as e:
+                tk.messagebox.showerror("Error", f"Failed to save: {e}")
 
     # --- UI Helpers ---
     def _create_section_label(self, parent, text):
-        tk.Label(parent, text=text, font=("Segoe UI", 16, "bold"), bg=self.colors.get("card_bg"), fg=self.colors.get("sidebar_bg")).pack(anchor="w", pady=(0, 15))
+        tk.Label(parent, text=text, font=("Segoe UI", 16, "bold"), bg=self.colors.get("card_bg"), fg=self.colors.get("text_primary")).pack(anchor="w", pady=(0, 15))
         
     def _create_field_label(self, parent, text):
         tk.Label(parent, text=text, font=("Segoe UI", 10, "bold"), bg=self.colors.get("card_bg"), fg="gray").pack(anchor="w", pady=(10, 5))
         
     def _create_entry(self, parent, variable):
-        entry = tk.Entry(parent, textvariable=variable, font=("Segoe UI", 11), relief="flat", highlightthickness=1, highlightbackground=self.colors.get("card_border"))
+        entry = tk.Entry(
+            parent, textvariable=variable, font=("Segoe UI", 11), relief="flat", 
+            highlightthickness=1, highlightbackground=self.colors.get("card_border"),
+            bg=self.colors.get("input_bg", "white"), fg=self.colors.get("input_fg", "black"),
+            insertbackground=self.colors.get("input_fg", "black") # Caret color
+        )
         entry.pack(fill="x", ipady=8) # Taller input
         
     def _create_text_area(self, parent):
-        txt = tk.Text(parent, height=4, font=("Segoe UI", 11), relief="flat", highlightthickness=1, highlightbackground=self.colors.get("card_border"))
+        txt = tk.Text(
+            parent, height=4, font=("Segoe UI", 11), relief="flat", 
+            highlightthickness=1, highlightbackground=self.colors.get("card_border"),
+            bg=self.colors.get("input_bg", "white"), fg=self.colors.get("input_fg", "black"),
+            insertbackground=self.colors.get("input_fg", "black")
+        )
         txt.pack(fill="x", pady=(0, 5))
         return txt
 
@@ -482,7 +602,12 @@ class UserProfileView:
                 
                 self.allergies_text.insert("1.0", profile.allergies or "")
                 self.medications_text.insert("1.0", profile.medications or "")
+                self.medications_text.insert("1.0", profile.medications or "")
                 self.conditions_text.insert("1.0", profile.medical_conditions or "")
+                
+                # PR #5 Load
+                self.surgeries_text.insert("1.0", profile.surgeries or "")
+                self.therapy_text.insert("1.0", profile.therapy_history or "")
             else:
                 self.blood_type_var.set("Unknown")
             
@@ -521,6 +646,10 @@ class UserProfileView:
             profile.medications = self.medications_text.get("1.0", tk.END).strip()
             profile.medical_conditions = self.conditions_text.get("1.0", tk.END).strip()
             
+            # PR #5 Save
+            profile.surgeries = self.surgeries_text.get("1.0", tk.END).strip()
+            profile.therapy_history = self.therapy_text.get("1.0", tk.END).strip()
+            
             session.commit()
             session.close()
             
@@ -536,15 +665,15 @@ class UserProfileView:
     def _render_strengths_view(self):
         # Card Container (no fixed frame, use PanedWindow wrapper)
         # Using a vertical frame first to hold footer
-        main_layout = tk.Frame(self.view_container, bg=self.colors.get("bg_secondary"))
+        main_layout = tk.Frame(self.view_container, bg=self.colors.get("bg"))
         main_layout.pack(fill="both", expand=True)
         
         # Responsive PanedWindow
-        paned = tk.PanedWindow(main_layout, orient=tk.HORIZONTAL, bg=self.colors.get("bg_secondary"), sashwidth=4, sashrelief="flat")
+        paned = tk.PanedWindow(main_layout, orient=tk.HORIZONTAL, bg=self.colors.get("bg"), sashwidth=4, sashrelief="flat")
         paned.pack(fill="both", expand=True)
 
         # --- LEFT COLUMN: Tags ---
-        left_wrapper = tk.Frame(paned, bg=self.colors.get("bg_secondary"))
+        left_wrapper = tk.Frame(paned, bg=self.colors.get("bg"))
         paned.add(left_wrapper, minsize=350, sticky="nsew", padx=5) # Tuple padding (0,5) causes TclError
         
         left_card = tk.Frame(left_wrapper, bg=self.colors.get("card_bg"), highlightbackground=self.colors.get("card_border"), highlightthickness=1)
@@ -574,7 +703,7 @@ class UserProfileView:
         self.goals_text = self._create_text_area(left_col)
         
         # --- RIGHT COLUMN: Preferences ---
-        right_wrapper = tk.Frame(paned, bg=self.colors.get("bg_secondary"))
+        right_wrapper = tk.Frame(paned, bg=self.colors.get("bg"))
         paned.add(right_wrapper, minsize=350, sticky="nsew", padx=5) # Tuple padding causes error
         
         right_card = tk.Frame(right_wrapper, bg=self.colors.get("card_bg"), highlightbackground=self.colors.get("card_border"), highlightthickness=1)
@@ -608,7 +737,12 @@ class UserProfileView:
         comm_styles = ["Direct & Concise", "Supportive & Gentle", "Data-Driven", "Storytelling"]
         self.comm_style_var = tk.StringVar()
         self.comm_style_combo = ttk.Combobox(right_col, textvariable=self.comm_style_var, values=comm_styles, state="readonly", font=("Segoe UI", 12))
+        self.comm_style_combo = ttk.Combobox(right_col, textvariable=self.comm_style_var, values=comm_styles, state="readonly", font=("Segoe UI", 12))
         self.comm_style_combo.pack(fill="x", pady=(0, 20))
+
+        # --- PR #5: Detailed Comm Style ---
+        self._create_field_label(right_col, "Detailed Communication Style")
+        self.comm_style_text = self._create_text_area(right_col)
         
         # Boundaries
         self._create_section_label(right_col, "Privacy Boundaries")
@@ -618,7 +752,7 @@ class UserProfileView:
         self.boundaries_input.pack(fill="x", pady=(0, 20))
 
         # Footer Actions (Overlay or Bottom of Main Layout)
-        footer = tk.Frame(main_layout, bg=self.colors.get("bg_secondary"), height=60)
+        footer = tk.Frame(main_layout, bg=self.colors.get("bg"), height=60)
         footer.pack(fill="x", side="bottom", padx=0, pady=10)
         
         save_btn = tk.Button(
@@ -653,7 +787,12 @@ class UserProfileView:
                 
                 self.learn_style_var.set(s.learning_style or "")
                 self.comm_style_var.set(s.communication_preference or "")
+                self.learn_style_var.set(s.learning_style or "")
+                self.comm_style_var.set(s.communication_preference or "")
                 self.goals_text.insert("1.0", s.goals or "")
+
+                # PR #5 Load
+                self.comm_style_text.insert("1.0", s.comm_style or "")
                 
             session.close()
         except Exception as e:
@@ -677,7 +816,12 @@ class UserProfileView:
             
             strengths.learning_style = self.learn_style_var.get()
             strengths.communication_preference = self.comm_style_var.get()
+            strengths.learning_style = self.learn_style_var.get()
+            strengths.communication_preference = self.comm_style_var.get()
             strengths.goals = self.goals_text.get("1.0", tk.END).strip()
+            
+            # PR #5 Save
+            strengths.comm_style = self.comm_style_text.get("1.0", tk.END).strip()
             
             session.commit()
             session.close()

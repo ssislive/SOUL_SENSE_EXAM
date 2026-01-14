@@ -1,0 +1,148 @@
+2026-01-14 15:38:41,566 - root - INFO - Logging initialized.
+2026-01-14 15:38:41,567 - root - INFO - Application started
+2026-01-14 15:38:41,573 - app.questions - ERROR - Failed to load questions: No questions found in database.
+2026-01-14 15:38:41,573 - root - ERROR - Fatal Error: Question bank could not be loaded.
+The application cannot start. | Error: No questions found in database.
+Traceback (most recent call last):
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\main.py", line 151, in <module>
+    rows = load_questions()  # [(id, text, tooltip, min_age, max_age)]
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\questions.py", line 273, in load_questions
+    questions = _get_cached_questions_from_db(age)
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\questions.py", line 141, in _get_cached_questions_from_db
+    raise ResourceError("No questions found in database.")
+app.exceptions.ResourceError: No questions found in database.
+2026-01-14 15:43:58,810 - root - INFO - Logging initialized.
+2026-01-14 15:43:58,825 - root - INFO - Application started
+2026-01-14 15:43:58,827 - root - INFO - Loaded 100 total questions from DB
+2026-01-14 15:44:01,273 - root - INFO - Loading ML Model: models\risk_model_v20260111_223056.pkl
+2026-01-14 15:44:01,396 - root - INFO - ML Predictor initialized successfully
+2026-01-14 15:44:01,456 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-14 15:44:01,478 - root - ERROR - 
+
+>>> APP INITIALIZED V2.1 <<<
+
+2026-01-14 15:44:01,493 - root - INFO - Using 10 questions based on settings
+2026-01-14 15:46:33,434 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
+2026-01-14 15:47:39,037 - root - INFO - Logging initialized.
+2026-01-14 15:47:39,037 - root - INFO - Application started
+2026-01-14 15:47:39,038 - root - INFO - Loaded 100 total questions from DB
+2026-01-14 15:47:41,421 - root - INFO - Loading ML Model: models\risk_model_v20260111_223056.pkl
+2026-01-14 15:47:41,485 - root - INFO - ML Predictor initialized successfully
+2026-01-14 15:47:41,526 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-14 15:47:41,559 - root - ERROR - 
+
+>>> APP INITIALIZED V2.1 <<<
+
+2026-01-14 15:47:41,586 - root - INFO - Using 10 questions based on settings
+2026-01-14 15:48:57,778 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
+2026-01-14 15:50:26,724 - root - INFO - Session started | user=rohan | age=20 | age_group=adult | profession=Student | questions=10
+2026-01-14 15:50:27,097 - root - INFO - Created new user for settings: rohan
+2026-01-14 15:50:27,138 - root - INFO - Loaded settings for user 1: {'theme': 'light', 'question_count': 10, 'sound_enabled': True, 'notifications_enabled': True, 'language': 'en'}
+2026-01-14 15:50:27,138 - root - INFO - Reloaded 10 questions based on settings
+2026-01-14 15:50:36,420 - root - INFO - Reloaded 5 questions based on settings
+2026-01-14 15:50:40,295 - root - ERROR - 
+
+>>> DEBUG: Start Test Clicked! (New Handler)
+2026-01-14 15:50:40,300 - root - ERROR - >>> DEBUG: self.current_user_id = 1
+2026-01-14 15:50:40,306 - root - ERROR - >>> DEBUG: GOING TO EXAM
+2026-01-14 15:50:40,472 - app.services.exam_service - INFO - Exam session started for user: rohan
+2026-01-14 15:51:12,834 - app.services.exam_service - INFO - Exam saved. Score: 11, Sentiment: 0.0
+2026-01-14 15:51:22,480 - root - CRITICAL - Unhandled exception in GUI
+Traceback (most recent call last):
+  File "C:\Python314\Lib\tkinter\__init__.py", line 2088, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ui\satisfaction.py", line 76, in _on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\tkinter\__init__.py", line 2134, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel5.!canvas"
+2026-01-14 15:51:22,489 - root - ERROR - Interface Error: A graphical interface error occurred.
+2026-01-14 15:51:25,783 - root - CRITICAL - Unhandled exception in GUI
+Traceback (most recent call last):
+  File "C:\Python314\Lib\tkinter\__init__.py", line 2088, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ui\satisfaction.py", line 76, in _on_mousewheel
+    canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\tkinter\__init__.py", line 2134, in yview_scroll
+    self.tk.call(self._w, 'yview', 'scroll', number, what)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_tkinter.TclError: invalid command name ".!toplevel5.!canvas"
+2026-01-14 15:51:25,796 - root - ERROR - Interface Error: A graphical interface error occurred.
+2026-01-14 16:18:52,247 - root - CRITICAL - Unhandled exception in GUI
+Traceback (most recent call last):
+  File "C:\Python314\Lib\tkinter\__init__.py", line 2088, in __call__
+    return self.func(*args)
+           ~~~~~~~~~^^^^^^^
+  File "C:\Python314\Lib\tkinter\__init__.py", line 876, in callit
+    func(*args, **kw)
+    ~~~~^^^^^^^^^^^^^
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\main.py", line 711, in launch_main_app
+    root.mainloop()
+    ~~~~~~~~~~~~~^^
+  File "C:\Python314\Lib\tkinter\__init__.py", line 1613, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+KeyboardInterrupt
+2026-01-14 16:18:52,661 - root - ERROR - Unexpected Error: An unexpected error occurred.
+2026-01-14 16:19:23,983 - root - INFO - Logging initialized.
+2026-01-14 16:19:24,021 - root - INFO - Application started
+2026-01-14 16:19:24,030 - root - INFO - Loaded 100 total questions from DB
+2026-01-14 16:19:26,831 - root - INFO - Loading ML Model: models\risk_model_v20260111_223056.pkl
+2026-01-14 16:19:26,893 - root - INFO - ML Predictor initialized successfully
+2026-01-14 16:19:27,235 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-14 16:19:27,239 - root - ERROR - 
+
+>>> APP INITIALIZED V2.1 <<<
+
+2026-01-14 16:19:27,239 - root - INFO - Using 10 questions based on settings
+2026-01-14 16:19:37,363 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
+2026-01-14 16:20:41,219 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
+2026-01-14 16:26:47,429 - root - INFO - Logging initialized.
+2026-01-14 16:26:47,442 - root - INFO - Application started
+2026-01-14 16:26:47,443 - root - INFO - Loaded 100 total questions from DB
+2026-01-14 16:26:49,939 - root - INFO - Loading ML Model: models\risk_model_v20260111_223056.pkl
+2026-01-14 16:26:50,014 - root - INFO - ML Predictor initialized successfully
+2026-01-14 16:26:50,111 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-14 16:26:50,122 - root - ERROR - 
+
+>>> APP INITIALIZED V2.1 <<<
+
+2026-01-14 16:26:50,130 - root - INFO - Using 10 questions based on settings
+2026-01-14 16:27:00,907 - root - INFO - Session started | user=rohan | age=22 | age_group=adult | profession=Student | questions=10
+2026-01-14 16:27:01,286 - root - INFO - Loaded settings for user 1: {'theme': 'dark', 'question_count': 5, 'sound_enabled': True, 'notifications_enabled': True, 'language': 'en'}
+2026-01-14 16:27:01,287 - root - INFO - Reloaded 5 questions based on settings
+2026-01-14 16:27:25,917 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
+2026-01-14 16:28:42,977 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:28:42,978 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:28:58,555 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:28:58,555 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:28:59,744 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:28:59,745 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:01,383 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:01,384 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:02,269 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:02,270 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:03,494 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:03,495 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:04,426 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:29:04,427 - matplotlib.category - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2026-01-14 16:36:36,621 - root - INFO - Logging initialized.
+2026-01-14 16:36:36,664 - root - INFO - Application started
+2026-01-14 16:36:36,694 - root - INFO - Loaded 100 total questions from DB
+2026-01-14 16:36:40,729 - root - INFO - Loading ML Model: models\risk_model_v20260111_223056.pkl
+2026-01-14 16:36:40,825 - root - INFO - ML Predictor initialized successfully
+2026-01-14 16:36:40,890 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-14 16:36:40,899 - root - ERROR - 
+
+>>> APP INITIALIZED V2.1 <<<
+
+2026-01-14 16:36:40,904 - root - INFO - Using 10 questions based on settings
+2026-01-14 16:37:58,190 - root - INFO - Session started | user=rohan | age=20 | age_group=adult | profession=Student | questions=10
+2026-01-14 16:37:58,630 - root - INFO - Loaded settings for user 1: {'theme': 'dark', 'question_count': 5, 'sound_enabled': True, 'notifications_enabled': True, 'language': 'en'}
+2026-01-14 16:37:58,631 - root - INFO - Reloaded 5 questions based on settings
+2026-01-14 16:38:30,421 - app.ml.clustering - INFO - Model loaded from B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\ml\models\clustering\emotional_profile_model.pkl
