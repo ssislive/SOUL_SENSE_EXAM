@@ -431,6 +431,28 @@ class SoulSenseApp:
         # Render Profile into content_area
         UserProfileView(self.content_area, self)
 
+# --- Global Error Handlers ---
+
+def show_error(title, message, exception=None):
+    """Global error display function"""
+    if exception:
+        logging.error(f"{title}: {message} - {exception}")
+    else:
+        logging.error(f"{title}: {message}")
+        
+    try:
+        messagebox.showerror(title, message)
+    except:
+        print(f"CRITICAL ERROR (No GUI): {title} - {message}")
+
+def global_exception_handler(self, exc_type, exc_value, traceback_obj):
+    """Handle uncaught exceptions"""
+    import traceback
+    traceback_str = "".join(traceback.format_exception(exc_type, exc_value, traceback_obj))
+    logging.critical(f"Uncaught Exception: {traceback_str}")
+    show_error("Unexpected Error", f"An unexpected error occurred:\n{exc_value}", exception=traceback_str)
+
+
 if __name__ == "__main__":
     try:
         root = tk.Tk()
