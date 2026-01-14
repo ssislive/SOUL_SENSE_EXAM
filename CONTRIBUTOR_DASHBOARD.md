@@ -2,21 +2,21 @@
 
 ## Repository: nupurmadaan04/SOUL_SENSE_EXAM
 
-### Open Issues: 27
-### Total PRs: 141
+### Open Issues: 11
+### Total PRs: 149
 
 ### Contributors Activity
 
 | Contributor | Open Issues Created | PRs Created |
 |------------|------------------|------------|
-| nupurmadaan04 | 24 | 0 |
-| Rohanrathod7 | 0 | 22 |
-| ssislive | 0 | 20 |
-| neeru24 | 0 | 40 |
+| nupurmadaan04 | 10 | 0 |
+| Sappymukherjee214 | 0 | 7 |
+| Rohanrathod7 | 0 | 25 |
+| ssislive | 0 | 21 |
+| neeru24 | 0 | 41 |
 | Dbansal06 | 0 | 1 |
 | RakshithaNagaraju74 | 0 | 1 |
 | VeDaNsH-D | 0 | 11 |
-| Sappymukherjee214 | 0 | 4 |
 | Abhijeet-980 | 0 | 3 |
 | Kush05Bhardwaj | 0 | 2 |
 | Diksha78-bot | 0 | 2 |
