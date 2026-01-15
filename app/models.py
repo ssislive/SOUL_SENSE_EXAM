@@ -248,6 +248,31 @@ class SatisfactionHistory(Base):
     __table_args__ = (
         Index('idx_satisfaction_history_user_month', 'user_id', 'month_year'),
     )
+
+class AssessmentResult(Base):
+    """
+    Stores results for periodic/specialized assessments (PR #7).
+    Supported types: 'career_clarity', 'work_satisfaction', 'strengths'.
+    """
+    __tablename__ = 'assessment_results'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    
+    assessment_type = Column(String, nullable=False, index=True) # e.g. 'career_clarity'
+    timestamp = Column(String, default=lambda: datetime.utcnow().isoformat(), index=True)
+    
+    total_score = Column(Integer, nullable=False) # 0-100 or similar scale
+    details = Column(Text, nullable=False) # JSON string: {"q1": "yes", "q2": 5, "raw_score": 85}
+    
+    # Optional: Link to a specific Journal Entry if triggered by one
+    journal_entry_id = Column(Integer, ForeignKey('journal_entries.id'), nullable=True)
+
+    user = relationship("User")
+    
+    __table_args__ = (
+        Index('idx_assessment_user_type', 'user_id', 'assessment_type'),
+    )
     
 # Simple function to get session (from upstream)
 def get_session():
