@@ -4,7 +4,9 @@ import sys
 import logging
 import time
 import math
-from typing import Optional
+import math
+from typing import Optional, Dict, Any, Tuple
+from app.services.exam_service import ExamSession
 
 # Ensure app is in path
 sys.path.append(os.getcwd())
@@ -68,7 +70,7 @@ def colorize(text: str, color: str) -> str:
     return text
 
 class SoulSenseCLI:
-    def __init__(self):
+    def __init__(self) -> None:
         self.username = ""
         self.age = 0
         self.age_group = ""
@@ -89,10 +91,10 @@ class SoulSenseCLI:
                 except Exception:
                     pass
 
-    def clear_screen(self):
+    def clear_screen(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def print_header(self):
+    def print_header(self) -> None:
         self.clear_screen()
         print("="*60)
         print("      S O U L   S E N S E   ( C L I   V E R S I O N )")
@@ -106,7 +108,7 @@ class SoulSenseCLI:
         except EOFError:
             return ""
 
-    def authenticate(self):
+    def authenticate(self) -> None:
         """Get user details with validation and load settings"""
         self.print_header()
         
@@ -176,7 +178,7 @@ class SoulSenseCLI:
         print("\nLoading assessment...\n")
         time.sleep(1)
 
-    def initialize_session(self):
+    def initialize_session(self) -> None:
         """Load questions and start session"""
         try:
             all_questions = load_questions(age=self.age)
@@ -190,14 +192,14 @@ class SoulSenseCLI:
             print(f"Error loading exam: {e}")
             sys.exit(1)
 
-    def print_progress(self, current, total, pct):
+    def print_progress(self, current: int, total: int, pct: float) -> None:
         """ASCII Progress Bar"""
         bar_len = 30
         filled_len = int(bar_len * pct / 100)
         bar = '█' * filled_len + '-' * (bar_len - filled_len)
         print(f"\nProgress: [{bar}] {int(pct)}% ({current}/{total})")
 
-    def run_exam_loop(self):
+    def run_exam_loop(self) -> None:
         """Main Exam Loop"""
         while not self.session.is_finished():
             self.clear_screen()
@@ -247,7 +249,7 @@ class SoulSenseCLI:
                 else:
                     print("Invalid input. Please enter 1-4, 'b', or 'q'.")
 
-    def run_reflection(self):
+    def run_reflection(self) -> None:
         """Reflection Phase"""
         self.clear_screen()
         print("="*60)
@@ -263,7 +265,7 @@ class SoulSenseCLI:
         self.session.submit_reflection(text)
         time.sleep(1)
 
-    def get_score_label(self, percentage: float) -> tuple:
+    def get_score_label(self, percentage: float) -> Tuple[str, str, str]:
         """Return (label, emoji, color) based on score percentage"""
         if percentage >= 85:
             return ("EXCELLENT", "🌟", Colors.GREEN)
@@ -283,7 +285,7 @@ class SoulSenseCLI:
         else:
             return "Negative"
 
-    def get_historical_data(self):
+    def get_historical_data(self) -> Tuple[Optional[float], Optional[float]]:
         """Fetch user's previous scores for comparison"""
         try:
             from app.db import get_connection
@@ -310,7 +312,7 @@ class SoulSenseCLI:
         except Exception:
             return None, None
 
-    def show_results(self):
+    def show_results(self) -> None:
         """Display Enhanced Final Results"""
         success = self.session.finish_exam()
         if not success:
@@ -367,7 +369,7 @@ class SoulSenseCLI:
         print("Thank you for using Soul Sense CLI.")
         self.get_input("\nPress Enter to exit...")
 
-    def show_main_menu(self):
+    def show_main_menu(self) -> int:
         """Display main menu and return user choice"""
         self.print_header()
         
@@ -387,7 +389,7 @@ class SoulSenseCLI:
                 return int(choice)
             print("Invalid choice. Please enter 1-7.")
 
-    def show_history(self):
+    def show_history(self) -> None:
         """Display exam history with ASCII graph"""
         self.clear_screen()
         print("="*60)
@@ -461,7 +463,7 @@ class SoulSenseCLI:
         
         self.get_input("\nPress Enter to continue...")
 
-    def show_statistics(self):
+    def show_statistics(self) -> None:
         """Display comprehensive user statistics"""
         self.clear_screen()
         print("="*60)
@@ -546,7 +548,7 @@ class SoulSenseCLI:
         
         self.get_input("\nPress Enter to continue...")
 
-    def export_results(self):
+    def export_results(self) -> None:
         """Export results to file with directory selection"""
         self.clear_screen()
         print("="*60)
@@ -644,7 +646,7 @@ class SoulSenseCLI:
         
         self.get_input("\nPress Enter to continue...")
 
-    def show_dashboard(self):
+    def show_dashboard(self) -> None:
         """Display dashboard sub-menu"""
         while True:
             self.clear_screen()
@@ -674,7 +676,7 @@ class SoulSenseCLI:
             else:
                 print("Invalid choice.")
 
-    def show_eq_trends(self):
+    def show_eq_trends(self) -> None:
         """Display EQ score trends over time"""
         self.clear_screen()
         print("="*60)
@@ -721,7 +723,7 @@ class SoulSenseCLI:
         
         self.get_input("\nPress Enter to continue...")
 
-    def show_time_analysis(self):
+    def show_time_analysis(self) -> None:
         """Display time-based analysis"""
         self.clear_screen()
         print("="*60)
@@ -780,7 +782,7 @@ class SoulSenseCLI:
         
         self.get_input("\nPress Enter to continue...")
 
-    def show_emotional_profile(self):
+    def show_emotional_profile(self) -> None:
         """Display emotional profile analysis"""
         self.clear_screen()
         print("="*60)

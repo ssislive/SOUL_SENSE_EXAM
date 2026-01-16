@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 from functools import lru_cache
 import threading
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any, Union, Callable
 from sqlalchemy.orm import Session
 
 from app.db import get_session, safe_db_context
@@ -22,8 +22,8 @@ CACHE_MAX_AGE_HOURS = 24  # Cache valid for 24 hours
 MEMORY_CACHE_TTL = 300  # 5 minutes for memory cache
 
 # ------------------ PERFORMANCE OPTIMIZATIONS ------------------
-_questions_cache = {}
-_cache_timestamps = {}
+_questions_cache: Dict[str, List[Tuple[int, str, Optional[str], int, int]]] = {}
+_cache_timestamps: Dict[str, float] = {}
 _cache_lock = threading.Lock()
 _last_preload_time = 0
 _preload_interval = 60  # Preload every 60 seconds if needed
@@ -48,9 +48,9 @@ def _is_cache_valid(cache_key: str) -> bool:
     cache_time = _cache_timestamps[cache_key]
     return (time.time() - cache_time) < MEMORY_CACHE_TTL
 
-def safe_thread_run(func, *args, **kwargs):
+def safe_thread_run(func: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
     """Wrapper to run a function safely in a thread with exception logging."""
-    def wrapper():
+    def wrapper() -> None:
         try:
             func(*args, **kwargs)
         except Exception as e:
@@ -59,7 +59,7 @@ def safe_thread_run(func, *args, **kwargs):
     thread = threading.Thread(target=wrapper, daemon=True)
     thread.start()
 
-def _save_to_disk_cache(questions: List[Tuple[int, str, Optional[str]]], age: Optional[int] = None):
+def _save_to_disk_cache(questions: List[Tuple[int, str, Optional[str], int, int]], age: Optional[int] = None) -> bool:
     """Save questions to disk cache file"""
     try:
         _ensure_cache_dir()
@@ -80,7 +80,7 @@ def _save_to_disk_cache(questions: List[Tuple[int, str, Optional[str]]], age: Op
         logger.error(f"Failed to save disk cache: {e}")
         return False
 
-def _load_from_disk_cache(age: Optional[int] = None):
+def _load_from_disk_cache(age: Optional[int] = None) -> Optional[List[Tuple[int, str, Optional[str], int, int]]]:
     """Load questions from disk cache if valid"""
     try:
         cache_key = "questions" if age is None else f"questions_age_{age}"
@@ -110,7 +110,7 @@ def _load_from_disk_cache(age: Optional[int] = None):
         return None
 
 @lru_cache(maxsize=8)  # Cache for different age filters
-def _get_cached_questions_from_db(age: Optional[int] = None) -> List[Tuple[int, str, Optional[str]]]:
+def _get_cached_questions_from_db(age: Optional[int] = None) -> List[Tuple[int, str, Optional[str], int, int]]:
     """Get questions from database with LRU caching"""
     # Using safe_db_context would be good, but LRU cache expects a return, 
     # and context manager yields. We can use get_session() but wrap in try..finally properly 
@@ -149,7 +149,7 @@ def _get_cached_questions_from_db(age: Optional[int] = None) -> List[Tuple[int, 
     finally:
         session.close()
 
-def _try_database_cache(session: Session, age: Optional[int] = None) -> List[Tuple[int, str, Optional[str]]]:
+def _try_database_cache(session: Session, age: Optional[int] = None) -> Optional[List[Tuple[int, str, Optional[str], int, int]]]:
     """Try to get questions from database cache table first"""
     try:
         query = session.query(QuestionCache).filter(QuestionCache.is_active == 1)
@@ -179,7 +179,12 @@ def _try_database_cache(session: Session, age: Optional[int] = None) -> List[Tup
             # Use safe_thread_run, but we need to define the target func better
             # For now keeping it simple as logic below is just a stub
             
-            result = [(c.question_id, c.question_text, None) for c in cached]
+            # Match the 5-tuple signature: (id, text, tooltip, min_age, max_age)
+            # QuestionCache model has these fields.
+            result = [
+                (c.question_id, c.question_text, c.tooltip, c.min_age, c.max_age) 
+                for c in cached
+            ]
             logger.debug(f"Loaded {len(result)} questions from DB cache")
             return result
     except Exception as e:
@@ -187,7 +192,7 @@ def _try_database_cache(session: Session, age: Optional[int] = None) -> List[Tup
     
     return None
 
-def _preload_background(age: Optional[int] = None):
+def _preload_background(age: Optional[int] = None) -> None:
     """Preload questions in background thread"""
     def preload():
         logger.debug(f"Background preloading questions (age filter: {age})")

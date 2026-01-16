@@ -7,16 +7,17 @@ import tkinter as tk
 from tkinter import ttk
 import logging
 import random
+from typing import Any, Optional, Callable
 
 
 class AuthManager:
     """Manages authentication and welcome screens with premium styling"""
     
-    def __init__(self, app):
+    def __init__(self, app: Any) -> None:
         self.app = app
         self.root = app.root
 
-    def create_welcome_screen(self):
+    def create_welcome_screen(self) -> None:
         """Create premium welcome screen with hero section and cards"""
         self.app.clear_screen()
         
@@ -265,7 +266,7 @@ class AuthManager:
         exit_btn.bind("<Enter>", lambda e: exit_btn.configure(bg=colors.get("error_light", "#FEE2E2")))
         exit_btn.bind("<Leave>", lambda e: exit_btn.configure(bg=colors.get("surface", "#FFFFFF")))
 
-    def create_username_screen(self, callback=None):
+    def create_username_screen(self, callback: Optional[Callable[[], None]] = None) -> None:
         """Create premium username input screen"""
         self.app.clear_screen()
         self.callback = callback  # Store callback for post-login action
@@ -422,7 +423,7 @@ class AuthManager:
         # Focus on username field
         self.username_entry.focus()
 
-    def submit_user_info(self):
+    def submit_user_info(self) -> None:
         """Validate and submit user info"""
         from tkinter import messagebox
         from app.utils import compute_age_group
