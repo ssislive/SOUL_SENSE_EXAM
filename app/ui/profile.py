@@ -1,4 +1,5 @@
 import tkinter as tk
+from typing import Any, Optional, Dict, List
 from tkinter import ttk, messagebox, simpledialog
 import logging
 import json
