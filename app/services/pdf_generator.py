@@ -10,11 +10,12 @@ import matplotlib
 matplotlib.use('Agg') # Use non-interactive backend
 import matplotlib.pyplot as plt
 import io
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
 class PDFReportGenerator:
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         self.filename = filename
         self.styles = getSampleStyleSheet()
         self.elements: List[Any] = []
@@ -33,7 +34,7 @@ class PDFReportGenerator:
             spaceAfter=12
         ))
 
-    def generate(self, username, score_data, insights, sentiment_score):
+    def generate(self, username: str, score_data: Dict[str, Any], insights: List[str], sentiment_score: float) -> bool:
         """
         Generate the PDF report.
         
@@ -111,7 +112,7 @@ class PDFReportGenerator:
             logger.error(f"Failed to generate PDF report: {e}", exc_info=True)
             return False
 
-    def _create_chart(self, score, max_score, sentiment):
+    def _create_chart(self, score: float, max_score: float, sentiment: float) -> Optional[io.BytesIO]:
         """Create a matplotlib chart and return it as a BytesIO object"""
         try:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
@@ -139,7 +140,7 @@ class PDFReportGenerator:
             logger.error(f"Error creating chart for PDF: {e}")
             return None
 
-    def _get_interpretation(self, score, max_score):
+    def _get_interpretation(self, score: float, max_score: float) -> str:
         """Generate a text interpretation of the score"""
         percentage = (score / max_score) * 100 if max_score > 0 else 0
         
@@ -165,7 +166,7 @@ class PDFReportGenerator:
                     "feedback from trusted friends or mentors.")
 
 
-def generate_pdf_report(username, score, max_score, percentage, age, responses, questions, sentiment_score=None, filepath=None):
+def generate_pdf_report(username: str, score: float, max_score: float, percentage: float, age: int, responses: List[int], questions: List[Any], sentiment_score: Optional[float] = None, filepath: Optional[str] = None) -> str:
     """
     Wrapper function to generate PDF report.
     This is the function imported by results.py.

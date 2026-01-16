@@ -12,12 +12,13 @@ except ImportError:
     generate_pdf_report = None
 import json
 from app.models import AssessmentResult
+from typing import Any, Dict, List, Optional, Tuple
 
 class ResultsManager:
-    def __init__(self, app):
+    def __init__(self, app: Any) -> None:
         self.app = app
 
-    def show_satisfaction_survey(self):
+    def show_satisfaction_survey(self) -> None:
         """Show satisfaction survey from results page"""
         try:
             from app.ui.satisfaction import SatisfactionSurvey
@@ -45,7 +46,7 @@ class ResultsManager:
             messagebox.showerror("Error", f"Cannot open survey: {str(e)}")
         
     # ---------- BENCHMARKING FUNCTIONS ----------
-    def calculate_percentile(self, score, avg_score, std_dev):
+    def calculate_percentile(self, score: float, avg_score: float, std_dev: float) -> int:
         """Calculate percentile based on normal distribution"""
         if std_dev == 0:
             return 50 if score == avg_score else (100 if score > avg_score else 0)
@@ -81,7 +82,7 @@ class ResultsManager:
             
         return percentile
 
-    def get_benchmark_comparison(self):
+    def get_benchmark_comparison(self) -> Dict[str, Any]:
         """Get benchmark comparisons for the current score"""
         comparisons = {}
         
@@ -120,7 +121,7 @@ class ResultsManager:
         
         return comparisons
 
-    def get_benchmark_interpretation(self, comparisons):
+    def get_benchmark_interpretation(self, comparisons: Dict[str, Any]) -> List[str]:
         """Get interpretation text based on benchmark comparisons"""
         interpretations = []
         
@@ -161,7 +162,7 @@ class ResultsManager:
         
         return interpretations
 
-    def create_benchmark_chart(self, parent, comparisons):
+    def create_benchmark_chart(self, parent: tk.Widget, comparisons: Dict[str, Any]) -> tk.Frame:
         """Create a visual benchmark comparison chart"""
         chart_frame = tk.Frame(parent)
         chart_frame.pack(fill="x", pady=10)
@@ -259,7 +260,7 @@ class ResultsManager:
         
         return chart_frame
 
-    def export_results_pdf(self):
+    def export_results_pdf(self) -> None:
         """Export current results to PDF"""
         if not generate_pdf_report:
             messagebox.showerror("Error", "PDF Generator module not available.")
@@ -305,11 +306,11 @@ class ResultsManager:
             messagebox.showerror("Export Error", f"Failed to generate PDF:\n{str(e)}")
             logging.error(f"PDF Export failed: {e}")
 
-    def show_results(self):
+    def show_results(self) -> None:
         """Main method to show results - calls show_visual_results"""
         self.show_visual_results()
 
-    def show_visual_results(self):
+    def show_visual_results(self) -> None:
         """Modern, elegant results page with responsive design"""
         self.app.clear_screen()
         self.app.root.state('zoomed')

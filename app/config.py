@@ -2,13 +2,14 @@ import os
 import json
 import logging
 import copy
+from typing import Dict, Any, Union
 from app.exceptions import ConfigurationError
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH: str = os.path.join(BASE_DIR, "config.json")
 
 # Default Configuration
-DEFAULT_CONFIG = {
+DEFAULT_CONFIG: Dict[str, Dict[str, Any]] = {
     "database": {
         "filename": "soulsense.db",
         "path": "db"
@@ -23,7 +24,7 @@ DEFAULT_CONFIG = {
     }
 }
 
-def load_config():
+def load_config() -> Dict[str, Any]:
     """Load configuration from config.json or return defaults."""
     if not os.path.exists(CONFIG_PATH):
         logging.warning(f"Config file not found at {CONFIG_PATH}. Using defaults.")
@@ -44,7 +45,7 @@ def load_config():
     except Exception as e:
         raise ConfigurationError(f"Failed to load config file: {e}", original_exception=e)
 
-def save_config(new_config):
+def save_config(new_config: Dict[str, Any]) -> bool:
     """Save configuration to config.json."""
     try:
         with open(CONFIG_PATH, "w") as f:
@@ -57,17 +58,17 @@ def save_config(new_config):
         raise ConfigurationError(f"Failed to save configuration: {e}", original_exception=e)
 
 # Load Config on Import
-_config = load_config()
+_config: Dict[str, Any] = load_config()
 
 # Expose Settings
 # Expose Settings
-DB_DIR_NAME = _config["database"]["path"]
-DB_FILENAME = _config["database"]["filename"]
+DB_DIR_NAME: str = _config["database"]["path"]
+DB_FILENAME: str = _config["database"]["filename"]
 
 # Directory Definitions
-DATA_DIR = os.path.join(BASE_DIR, "data")
-LOG_DIR = os.path.join(BASE_DIR, "logs")
-MODELS_DIR = os.path.join(BASE_DIR, "models")
+DATA_DIR: str = os.path.join(BASE_DIR, "data")
+LOG_DIR: str = os.path.join(BASE_DIR, "logs")
+MODELS_DIR: str = os.path.join(BASE_DIR, "models")
 
 # Ensure directories exist
 for directory in [DATA_DIR, LOG_DIR, MODELS_DIR]:
@@ -82,12 +83,12 @@ for directory in [DATA_DIR, LOG_DIR, MODELS_DIR]:
 # Or keep existing logic but default to Data?
 # Let's map "db" to DATA_DIR for simplicity if it matches default.
 if DB_DIR_NAME == "db":
-    DB_PATH = os.path.join(DATA_DIR, DB_FILENAME)
+    DB_PATH: str = os.path.join(DATA_DIR, DB_FILENAME)
 else:
     # Allow custom path relative to BASE_DIR if specified in config.json
     DB_PATH = os.path.join(BASE_DIR, DB_DIR_NAME, DB_FILENAME)
 
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+DATABASE_URL: str = f"sqlite:///{DB_PATH}"
 
 
 
@@ -100,10 +101,10 @@ if not os.path.exists(os.path.dirname(DB_PATH)):
         pass # Handle race condition or permission error
 
 # UI Settings
-THEME = _config["ui"]["theme"]
+THEME: str = _config["ui"]["theme"]
 
 # Feature Toggles
-ENABLE_JOURNAL = _config["features"]["enable_journal"]
-ENABLE_ANALYTICS = _config["features"]["enable_analytics"]
+ENABLE_JOURNAL: bool = _config["features"]["enable_journal"]
+ENABLE_ANALYTICS: bool = _config["features"]["enable_analytics"]
 
-APP_CONFIG = _config
+APP_CONFIG: Dict[str, Any] = _config

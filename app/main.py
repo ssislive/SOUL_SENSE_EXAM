@@ -13,9 +13,10 @@ from app.i18n_manager import get_i18n
 from app.i18n_manager import get_i18n
 from app.questions import load_questions
 from app.ui.assessments import AssessmentHub
+from typing import Optional, Dict, Any, List
 
 class SoulSenseApp:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("SoulSense AI - Mental Wellbeing")
         self.root.geometry("1400x900")
@@ -80,7 +81,7 @@ class SoulSenseApp:
         # Start Login Flow
         self.root.after(100, self.show_login_screen)
 
-    def show_login_screen(self):
+    def show_login_screen(self) -> None:
         """Show login popup on startup"""
         login_win = tk.Toplevel(self.root)
         login_win.title("SoulSense Login")
@@ -160,7 +161,7 @@ class SoulSenseApp:
                  font=("Segoe UI", 10), bg=self.colors["bg"], fg=self.colors["primary"],
                  bd=0, cursor="hand2").pack()
 
-    def _load_user_settings(self, username):
+    def _load_user_settings(self, username: str) -> None:
         """Load settings from DB for user"""
         try:
             from app.db import get_session
@@ -183,7 +184,7 @@ class SoulSenseApp:
         except Exception as e:
             self.logger.error(f"Error loading settings: {e}")
 
-    def _post_login_init(self):
+    def _post_login_init(self) -> None:
         """Initialize UI after login"""
         if hasattr(self, 'sidebar'):
             self.sidebar.update_user_info()
@@ -193,7 +194,7 @@ class SoulSenseApp:
         else:
             self.switch_view("home")
 
-    def apply_theme(self, theme_name):
+    def apply_theme(self, theme_name: str) -> None:
         """Update colors based on theme"""
         # Delegate to UIStyles manager
         self.ui_styles.apply_theme(theme_name)

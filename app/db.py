@@ -3,8 +3,10 @@ import os
 import sqlite3
 import logging
 from contextlib import contextmanager
+from typing import Iterator, Dict, Any, Optional, Generator
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import DATABASE_URL, DB_PATH
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def get_engine():
+def get_engine() -> Engine:
     return engine
 
 def get_session() -> Session:
@@ -25,7 +27,7 @@ def get_session() -> Session:
     return SessionLocal()
 
 @contextmanager
-def safe_db_context():
+def safe_db_context() -> Generator[Session, None, None]:
     """Context manager for safe database operations"""
     session = SessionLocal()
     try:
@@ -42,7 +44,7 @@ def safe_db_context():
     finally:
         session.close()
 
-def check_db_state():
+def check_db_state() -> bool:
     """Check and create database tables if needed"""
     logger.info("Checking database state...")
     
@@ -76,7 +78,7 @@ def check_db_state():
         create_tables_directly()
         return True
 
-def create_tables_directly():
+def create_tables_directly() -> None:
     """Create tables using direct SQLite"""
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -131,17 +133,17 @@ def create_tables_directly():
         raise DatabaseError("Failed to initialize database", original_exception=e)
 
 # Initialize database
-check_db_state()
+# check_db_state()  # DISABLED to prevent side-effects on import
 
 # Backward compatibility
-def get_connection(db_path=None):
+def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
     try:
         return sqlite3.connect(db_path or DB_PATH)
     except sqlite3.Error as e:
         logger.error(f"Failed to connect to raw database: {e}", exc_info=True)
         raise DatabaseError("Failed to connect to raw database.", original_exception=e)
 
-def get_user_settings(user_id):
+def get_user_settings(user_id: int) -> Dict[str, Any]:
     """
     Fetch settings for a user.
     Returns a dictionary of settings. Creates defaults if not found.
@@ -179,7 +181,7 @@ def get_user_settings(user_id):
             "language": settings.language
         }
 
-def update_user_settings(user_id, **kwargs):
+def update_user_settings(user_id: int, **kwargs: Any) -> bool:
     """
     Update settings for a user.
     Args:

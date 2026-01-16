@@ -5,7 +5,9 @@ Core models have been refactored elsewhere.
 """
 
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, Text, create_engine, event, Index, text
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship, declarative_base, Session
+from sqlalchemy.engine import Engine, Connection
+from typing import List, Optional, Any, Dict, Tuple, Union
 from datetime import datetime, timedelta
 import logging
 
@@ -13,7 +15,7 @@ import logging
 Base = declarative_base()
 
 class UserProfile:
-    def __init__(self):
+    def __init__(self) -> None:
         self.occupation = ""
         self.workload = 0 # 1-10
         self.stressors = [] # ["exams", "deadlines"]
@@ -291,7 +293,7 @@ class AssessmentResult(Base):
     )
     
 # Simple function to get session (from upstream)
-def get_session():
+def get_session() -> Session:
     from app.db import get_session as get_db_session
     return get_db_session()
 
@@ -300,7 +302,7 @@ def get_session():
 logger = logging.getLogger(__name__)
 
 @event.listens_for(Base.metadata, 'before_create')
-def receive_before_create(target, connection, **kw):
+def receive_before_create(target: Any, connection: Connection, **kw: Any) -> None:
     """Optimize database settings before tables are created"""
     logger.info("Optimizing database settings...")
     
@@ -314,7 +316,7 @@ def receive_before_create(target, connection, **kw):
         connection.execute(text('PRAGMA foreign_keys = ON'))  # Enable foreign key constraints
 
 @event.listens_for(Question.__table__, 'after_create')
-def receive_after_create_question(target, connection, **kw):
+def receive_after_create_question(target: Any, connection: Connection, **kw: Any) -> None:
     """Create additional indexes and optimizations after question table creation"""
     logger.info("Creating question search optimization indexes...")
     
@@ -393,7 +395,7 @@ class StatisticsCache(Base):
 
 # ==================== PERFORMANCE HELPER FUNCTIONS ====================
 
-def create_performance_indexes(engine):
+def create_performance_indexes(engine: Engine) -> None:
     """Create additional performance indexes that might be needed"""
     with engine.connect() as conn:
         conn.commit() 
@@ -418,7 +420,7 @@ def create_performance_indexes(engine):
         
         logger.info("Performance indexes created and database optimized")
 
-def preload_frequent_data(session):
+def preload_frequent_data(session: Session) -> None:
     """Preload frequently accessed data into cache"""
     try:
         # Cache active questions
@@ -468,7 +470,7 @@ def preload_frequent_data(session):
 
 # ==================== QUERY OPTIMIZATION FUNCTIONS ====================
 
-def get_active_questions_optimized(session, limit=None, offset=0):
+def get_active_questions_optimized(session: Session, limit: Optional[int] = None, offset: int = 0) -> List[Any]:
     """Optimized query for loading active questions"""
     # Try cache first
     cached = session.query(QuestionCache).filter(
@@ -502,7 +504,7 @@ def get_active_questions_optimized(session, limit=None, offset=0):
     
     return query.all()
 
-def get_user_scores_optimized(session, username, limit=50):
+def get_user_scores_optimized(session: Session, username: str, limit: int = 50) -> List["Score"]:
     """Optimized query for user scores with pagination"""
     return session.query(Score).filter(
         Score.username == username

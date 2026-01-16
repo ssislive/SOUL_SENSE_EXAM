@@ -13,6 +13,7 @@ import json
 import os
 import sqlite3
 import numpy as np
+from typing import Optional, Dict, List, Any, Tuple
 
 from app.i18n_manager import get_i18n
 from app.models import Score, JournalEntry, SatisfactionRecord
@@ -34,7 +35,7 @@ except ImportError:
 
 
 class AnalyticsDashboard:
-    def __init__(self, parent_root, username, colors=None, theme="light"):
+    def __init__(self, parent_root: tk.Widget, username: str, colors: Optional[Dict[str, str]] = None, theme: str = "light") -> None:
         self.parent_root = parent_root
         self.username = username
         self.benchmarks = self.load_benchmarks()
@@ -53,7 +54,7 @@ class AnalyticsDashboard:
                 "border": "#334155" if theme == "dark" else "#E2E8F0"
             }
 
-    def load_benchmarks(self):
+    def load_benchmarks(self) -> Optional[Dict[str, Any]]:
         """Load population benchmarks from JSON"""
         try:
             with open("app/benchmarks.json", "r") as f:
@@ -61,7 +62,7 @@ class AnalyticsDashboard:
         except Exception:
             return None
         
-    def _create_scrollable_frame(self, parent):
+    def _create_scrollable_frame(self, parent: tk.Widget) -> tk.Frame:
         """Create a consistent scrollable frame for tabs (Hidden Scrollbar)"""
         container = tk.Frame(parent, bg=self.colors.get("bg", "#FFFFFF"))
         container.pack(fill="both", expand=True)
@@ -107,7 +108,7 @@ class AnalyticsDashboard:
         
         return scrollable_frame
 
-    def render_dashboard(self):
+    def render_dashboard(self) -> None:
         """Render dashboard embedded in parent_root"""
         colors = self.colors
         
@@ -174,7 +175,7 @@ class AnalyticsDashboard:
         notebook.add(satisfaction_frame, text="💼 Satisfaction")
         self.show_satisfaction_analytics(satisfaction_frame)
 
-    def show_wellbeing_analytics(self, parent):
+    def show_wellbeing_analytics(self, parent: tk.Widget) -> None:
         """Show comprehensive health and wellbeing analytics (PR #7)"""
         parent = self._create_scrollable_frame(parent)
         

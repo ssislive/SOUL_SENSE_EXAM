@@ -1,6 +1,8 @@
+from typing import Optional
+
 class SoulSenseError(Exception):
     """Base exception for SoulSense application."""
-    def __init__(self, message, original_exception=None):
+    def __init__(self, message: str, original_exception: Optional[Exception] = None) -> None:
         super().__init__(message)
         self.original_exception = original_exception
 

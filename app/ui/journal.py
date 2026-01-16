@@ -1,5 +1,7 @@
 # app/ui/journal.py
 import tkinter as tk
+from typing import Optional, Any
+from tkinter import ttk, messagebox, scrolledtext
 from tkinter import ttk, messagebox, scrolledtext
 from datetime import datetime, timedelta
 import logging
@@ -19,7 +21,7 @@ DailyHistoryView = None
 
 
 class JournalFeature:
-    def __init__(self, parent_root, app=None):
+    def __init__(self, parent_root: tk.Widget, app: Optional[Any] = None) -> None:
         """
         Initialize Journal Feature
         
@@ -49,7 +51,7 @@ class JournalFeature:
         # Initialize VADER sentiment analyzer
         self._initialize_sentiment_analyzer()
         
-    def _initialize_sentiment_analyzer(self):
+    def _initialize_sentiment_analyzer(self) -> None:
         """Initialize the VADER sentiment analyzer"""
         try:
             nltk.data.find('sentiment/vader_lexicon.zip')
@@ -62,7 +64,7 @@ class JournalFeature:
             logging.error(f"Failed to initialize sentiment analyzer: {e}")
             self.sia = None
 
-    def render_journal_view(self, parent_frame, username):
+    def render_journal_view(self, parent_frame: tk.Widget, username: str) -> None:
         """Render journal view inside a parent frame (Embedded Mode)"""
         self.username = username
         self.journal_window = parent_frame # Alias for compatibility

@@ -1,4 +1,5 @@
 import tkinter as tk
+from typing import Any, Optional, Dict, List
 from tkinter import ttk, messagebox, simpledialog
 import logging
 import json
@@ -14,7 +15,7 @@ from tkcalendar import DateEntry
 from app.ui.settings import SettingsManager
 
 class UserProfileView:
-    def __init__(self, parent_root, app_instance):
+    def __init__(self, parent_root: tk.Widget, app_instance: Any) -> None:
         self.parent_root = parent_root
         self.app = app_instance
         self.i18n = app_instance.i18n
@@ -126,7 +127,7 @@ class UserProfileView:
         # Initialize default view (Phase 53: Overview as default)
         self.sidebar.select_item("overview")
 
-    def center_window(self):
+    def center_window(self) -> None:
         self.window.update_idletasks()
         width = self.window.winfo_width()
         height = self.window.winfo_height()
@@ -134,7 +135,7 @@ class UserProfileView:
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
         self.window.geometry(f'{width}x{height}+{x}+{y}')
 
-    def on_nav_change(self, view_id):
+    def on_nav_change(self, view_id: str) -> None:
         # Clear current view
         for widget in self.view_container.winfo_children():
             widget.destroy()

@@ -1,13 +1,14 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 from app.config import LOG_DIR
-LOG_FILE = "soulsense.log"
-MAX_BYTES = 10 * 1024 * 1024  # 10MB
-BACKUP_COUNT = 5
+LOG_FILE: str = "soulsense.log"
+MAX_BYTES: int = 10 * 1024 * 1024  # 10MB
+BACKUP_COUNT: int = 5
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure centralized logging for the application."""
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)

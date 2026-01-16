@@ -42,7 +42,7 @@ Everything you need to know about the **Soul Sense Exam**.
 <tr>
 <td width="65%" valign="top">
 
-<h3>User FAQs</h3>
+### User FAQs
 
 <details>
 <summary><strong>Is this a medical or diagnostic test?</strong></summary>
@@ -94,10 +94,66 @@ You can raise an issue on the GitHub repository or contact the project maintaine
 
 <br>
 <hr>
+
+## 🛠️ Developer Guide (Run Locally)
+
+### 1. Prerequisites
+
+- Python 3.8+
+- [Git](https://git-scm.com/)
+
+### 2. Installation
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/Rohanrathod7/soul-sense-Exam.git
+    cd soul-sense-Exam/SOUL_SENSE_EXAM
+    ```
+
+2.  **Set up a virtual environment (Recommended):**
+
+    ```bash
+    python -m venv venv
+    # Windows
+    .\venv\Scripts\activate
+    # Mac/Linux
+    source venv/bin/activate
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+### 3. Running the Application
+
+- **Desktop GUI (Main App):**
+
+  ```bash
+  python -m app.main
+  ```
+
+- **CLI Version (Terminal Mode):**
+  ```bash
+  python -m app.cli
+  ```
+
+### 4. Running Tests
+
+Run the full test suite to verify your environment:
+
+```bash
+python -m pytest tests/
+```
+
+<hr>
 <h3>Contributor FAQs</h3>
 
 <details>
 <summary><strong>How do I run this project locally?</strong></summary>
+See the <strong>Developer Guide</strong> section above for full setup instructions.
+</details>
 <br>
 Clone the repo, set up a virtual environment (<code>python -m venv venv</code>), install dependencies with <code>pip install -r requirements.txt</code>, and run <code>python -m app.main</code> to launch the application.
 </details>

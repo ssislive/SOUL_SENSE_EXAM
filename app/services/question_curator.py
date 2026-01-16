@@ -1,5 +1,7 @@
 
 import random
+from typing import List, Dict, Any, Optional
+from app.models import UserProfile
 
 class QuestionCurator:
     """
@@ -79,7 +81,7 @@ class QuestionCurator:
     }
 
     @staticmethod
-    def get_questions(assessment_type, count=10):
+    def get_questions(assessment_type: str, count: int = 10) -> List[str]:
         """
         Returns a list of questions for the given type.
         
@@ -100,7 +102,7 @@ class QuestionCurator:
         return bank[:actual_count]
 
     @staticmethod
-    def recommend_tests(user_profile, score_data):
+    def recommend_tests(user_profile: Any, score_data: Dict[str, Any]) -> List[str]:
         """
         Analyzes user data to recommend specific Deep Dives.
         

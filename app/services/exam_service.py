@@ -22,7 +22,7 @@ class ExamSession:
     Decoupled from any specific UI (Tkinter/CLI).
     """
 
-    def __init__(self, username: str, age: int, age_group: str, questions: List[Tuple]):
+    def __init__(self, username: str, age: int, age_group: str, questions: List[Tuple[Any, ...]]) -> None:
         self.username = username
         self.age = age
         self.age_group = age_group
@@ -43,7 +43,7 @@ class ExamSession:
         self.is_rushed = False
         self.is_inconsistent = False
 
-    def start_exam(self):
+    def start_exam(self) -> None:
         """Initialize or reset exam state"""
         self.current_question_index = 0
         self.responses = []
@@ -54,7 +54,7 @@ class ExamSession:
         self.start_question_timer()
         logger.info(f"Exam session started for user: {self.username}")
 
-    def start_question_timer(self):
+    def start_question_timer(self) -> None:
         """Mark the start time for the current question"""
         self.question_start_time = time.time()
 
@@ -80,7 +80,7 @@ class ExamSession:
         else:
             return (str(q_data), None)
 
-    def submit_answer(self, value: int):
+    def submit_answer(self, value: int) -> None:
         """
         Submit answer for current question and advance.
         Value should be 1-4.
