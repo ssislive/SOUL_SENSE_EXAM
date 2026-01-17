@@ -426,6 +426,7 @@ class AuthManager:
     def submit_user_info(self) -> None:
         """Validate and submit user info"""
         from app.utils import compute_age_group
+        from tkinter import messagebox
         from app.validation import validate_required, validate_age, sanitize_text
         
         # Sanitize entries
