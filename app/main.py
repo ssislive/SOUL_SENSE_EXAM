@@ -2,6 +2,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import logging
+import signal
+import atexit
 from app.ui.sidebar import SidebarNav
 from app.ui.styles import UIStyles
 from app.ui.dashboard import AnalyticsDashboard
@@ -416,6 +418,28 @@ class SoulSenseApp:
         # Render Profile into content_area
         UserProfileView(self.content_area, self)
 
+    def graceful_shutdown(self) -> None:
+        """Perform graceful shutdown operations"""
+        self.logger.info("Initiating graceful application shutdown...")
+
+        try:
+            # Commit any pending database operations
+            from app.db import get_session
+            session = get_session()
+            if session:
+                session.commit()
+                session.close()
+                self.logger.info("Database session committed and closed successfully")
+        except Exception as e:
+            self.logger.error(f"Error during database shutdown: {e}")
+
+        # Log shutdown
+        self.logger.info("Application shutdown complete")
+
+        # Destroy the root window to exit
+        if hasattr(self, 'root') and self.root:
+            self.root.destroy()
+
 # --- Global Error Handlers ---
 
 def show_error(title, message, exception=None):
@@ -442,6 +466,21 @@ if __name__ == "__main__":
     try:
         root = tk.Tk()
         app = SoulSenseApp(root)
+
+        # Set up graceful shutdown handlers
+        root.protocol("WM_DELETE_WINDOW", app.graceful_shutdown)
+
+        # Signal handlers for SIGINT (Ctrl+C) and SIGTERM
+        def signal_handler(signum, frame):
+            app.logger.info(f"Received signal {signum}, initiating shutdown")
+            app.graceful_shutdown()
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Register atexit handler as backup
+        atexit.register(app.graceful_shutdown)
+
         root.mainloop()
     except Exception as e:
         import traceback
