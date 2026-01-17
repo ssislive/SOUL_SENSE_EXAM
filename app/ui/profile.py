@@ -1286,9 +1286,27 @@ class UserProfileView:
         spinbox.pack(anchor="w", pady=5)
         
         # Save Button
-        tk.Button(parent, text="Save Preferences", 
+        tk.Button(parent, text="Save Preferences",
                  command=self._save_settings,
                  bg=colors.get("primary"), fg="white", font=("Segoe UI", 12), pady=5).pack(pady=20, anchor="w")
+
+        # Data Management Section
+        self._create_section_label(parent, "Data Management")
+
+        # Delete My Data Button
+        delete_btn = tk.Button(parent, text="🗑️ Delete My Data",
+                              command=self._delete_user_data,
+                              bg="#DC2626", fg="white", font=("Segoe UI", 12, "bold"),
+                              relief="flat", pady=10, padx=20)
+        delete_btn.pack(pady=(10, 20), anchor="w")
+
+        # Warning text
+        warning_text = ("This action will permanently delete all your personal data, "
+                       "including profiles, test results, journals, and settings. "
+                       "This cannot be undone.")
+        warning_label = tk.Label(parent, text=warning_text, font=("Segoe UI", 9),
+                                bg=colors.get("card_bg"), fg="#DC2626", wraplength=400, justify="left")
+        warning_label.pack(anchor="w", pady=(0, 20))
 
     def _save_settings(self):
         """Save settings to DB"""
@@ -1572,30 +1590,116 @@ class UserProfileView:
         try:
             session = get_session()
             user = session.query(User).filter_by(username=self.app.username).first()
-            
+
             if not user.strengths:
                 strengths = UserStrengths(user_id=user.id)
                 user.strengths = strengths
             else:
                 strengths = user.strengths
-            
+
             # Update fields
             strengths.top_strengths = json.dumps(self.strengths_input.get_tags())
             strengths.areas_for_improvement = json.dumps(self.improvements_input.get_tags())
             strengths.sharing_boundaries = json.dumps(self.boundaries_input.get_tags())
-            
+
             strengths.learning_style = self.learn_style_var.get()
             strengths.communication_preference = self.comm_style_var.get()
             strengths.learning_style = self.learn_style_var.get()
             strengths.communication_preference = self.comm_style_var.get()
             strengths.goals = self.goals_text.get("1.0", tk.END).strip()
-            
+
             # PR #5 Save
             strengths.comm_style = self.comm_style_text.get("1.0", tk.END).strip()
-            
+
             session.commit()
             session.close()
             messagebox.showinfo("Success", "Preferences saved successfully!")
         except Exception as e:
             logging.error(f"Error saving strengths: {e}")
             messagebox.showerror("Error", "Failed to save preferences.")
+
+    def _delete_user_data(self):
+        """Handle the delete user data action with confirmation."""
+        # First confirmation dialog
+        confirm1 = messagebox.askyesno(
+            "Delete My Data",
+            "Are you sure you want to delete all your personal data?\n\n"
+            "This includes:\n"
+            "• Profile information\n"
+            "• Test results and scores\n"
+            "• Journal entries\n"
+            "• Medical information\n"
+            "• Settings and preferences\n\n"
+            "This action cannot be undone.",
+            icon="warning",
+            parent=self.window
+        )
+
+        if not confirm1:
+            return
+
+        # Second confirmation dialog for extra safety
+        confirm2 = messagebox.askyesno(
+            "Final Confirmation",
+            f"Please confirm by typing your username: {self.app.username}\n\n"
+            "Type 'YES' below to permanently delete all data:",
+            icon="warning",
+            parent=self.window
+        )
+
+        if not confirm2:
+            return
+
+        # Get user ID
+        try:
+            from app.db import get_session
+            session = get_session()
+            user = session.query(User).filter_by(username=self.app.username).first()
+            session.close()
+
+            if not user:
+                messagebox.showerror("Error", "User not found.", parent=self.window)
+                return
+
+            user_id = user.id
+
+        except Exception as e:
+            logging.error(f"Error getting user ID: {e}")
+            messagebox.showerror("Error", "Failed to identify user.", parent=self.window)
+            return
+
+        # Perform deletion
+        try:
+            from app.db import delete_user_data
+            success = delete_user_data(user_id)
+
+            if success:
+                messagebox.showinfo(
+                    "Data Deleted",
+                    "All your personal data has been permanently deleted.\n\n"
+                    "You will now be logged out.",
+                    parent=self.window
+                )
+
+                # Log out the user by switching to login view
+                # Assuming the app has a switch_view method and "login" view
+                if hasattr(self.app, 'switch_view'):
+                    self.app.switch_view("login")
+                else:
+                    # Fallback: destroy current window and restart app
+                    self.window.quit()
+
+            else:
+                messagebox.showerror(
+                    "Deletion Failed",
+                    "Failed to delete your data. Please try again or contact support.",
+                    parent=self.window
+                )
+
+        except Exception as e:
+            logging.error(f"Error during data deletion: {e}")
+            messagebox.showerror(
+                "Error",
+                "An error occurred while deleting your data. Please contact support.",
+                parent=self.window
+            )
