@@ -458,10 +458,16 @@ class UserProfileView:
         dialog.title("My Manifesto")
         dialog.geometry("600x400")
         dialog.transient(self.window)
+        dialog.transient(self.window)
         dialog.grab_set()
         
-        # Center dialog
-        self.app.center_window(dialog, 600, 400)
+        # Center dialog (inline logic)
+        dialog.update_idletasks()
+        width = 600
+        height = 400
+        x = (self.window.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.window.winfo_screenheight() // 2) - (height // 2)
+        dialog.geometry(f'{width}x{height}+{x}+{y}')
         
         # Theme colors
         bg = self.colors.get("card_bg", "#ffffff")
