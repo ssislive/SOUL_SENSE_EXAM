@@ -1638,9 +1638,43 @@ class UserProfileView:
         warning_label.pack(anchor="w", pady=(0, 20))
         
         # ==================
+        # Data Backup Section (Issue #345)
+        # ==================
+        self._create_section_label(parent, "Data Backup")
+        
+        backup_desc = tk.Label(
+            parent,
+            text="Create and restore local backups of your data",
+            font=self.styles.get_font("xs"),
+            bg=colors.get("card_bg"),
+            fg="gray"
+        )
+        backup_desc.pack(anchor="w", pady=(0, 10))
+        
+        backup_btn = tk.Button(
+            parent,
+            text="💾 Manage Backups",
+            command=self._open_backup_manager,
+            font=self.styles.get_font("md", "bold"),
+            bg=colors.get("primary"),
+            fg="white",
+            relief="flat",
+            padx=20,
+            pady=10,
+            cursor="hand2"
+        )
+        backup_btn.pack(anchor="w", pady=(0, 20))
+        
+        # ==================
         # Experimental Features Section
         # ==================
         self._render_experimental_flags_section(parent)
+
+    def _open_backup_manager(self):
+        """Open the backup manager dialog (Issue #345)."""
+        from app.ui.backup_manager import BackupManager
+        backup_manager = BackupManager(self.app)
+        backup_manager.show_backup_dialog()
 
     def _save_settings(self):
         """Save settings to DB"""

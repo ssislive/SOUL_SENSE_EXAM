@@ -62,6 +62,7 @@ class SettingsManager:
         self._create_question_count_section(content_frame, colors)
         self._create_theme_section(content_frame, colors)
         self._create_sound_section(content_frame, colors)
+        self._create_backup_section(content_frame, colors)
         self._create_experimental_section(content_frame, colors)
         
         # Action Buttons
@@ -258,6 +259,67 @@ class SettingsManager:
             font=self.app.ui_styles.get_font("md"),
         )
         toggle.pack(side="right")
+    
+    def _create_backup_section(self, parent, colors):
+        """Create data backup section with button to open backup manager"""
+        section = tk.Frame(
+            parent,
+            bg=colors.get("surface", "#FFFFFF"),
+            highlightbackground=colors.get("border", "#E2E8F0"),
+            highlightthickness=1
+        )
+        section.pack(fill="x", pady=8)
+        
+        inner = tk.Frame(section, bg=colors.get("surface", "#FFFFFF"))
+        inner.pack(fill="x", padx=15, pady=12)
+        
+        # Layout: Label on left, button on right
+        left_frame = tk.Frame(inner, bg=colors.get("surface", "#FFFFFF"))
+        left_frame.pack(side="left", fill="x", expand=True)
+        
+        label = tk.Label(
+            left_frame,
+            text="💾 Data Backup",
+            font=self.app.ui_styles.get_font("sm", "bold"),
+            bg=colors.get("surface", "#FFFFFF"),
+            fg=colors.get("text_primary", "#0F172A")
+        )
+        label.pack(anchor="w")
+        
+        desc = tk.Label(
+            left_frame,
+            text="Create and restore local backups of your data",
+            font=self.app.ui_styles.get_font("xs"),
+            bg=colors.get("surface", "#FFFFFF"),
+            fg=colors.get("text_secondary", "#475569")
+        )
+        desc.pack(anchor="w")
+        
+        # Manage Backups button
+        manage_btn = tk.Button(
+            inner,
+            text="Manage Backups",
+            command=self._open_backup_manager,
+            font=self.app.ui_styles.get_font("xs", "bold"),
+            bg=colors.get("primary", "#3B82F6"),
+            fg=colors.get("text_inverse", "#FFFFFF"),
+            activebackground=colors.get("primary_hover", "#2563EB"),
+            activeforeground=colors.get("text_inverse", "#FFFFFF"),
+            relief="flat",
+            cursor="hand2",
+            padx=10,
+            pady=5,
+            borderwidth=0
+        )
+        manage_btn.pack(side="right")
+        manage_btn.bind("<Enter>", lambda e: manage_btn.configure(bg=colors.get("primary_hover", "#2563EB")))
+        manage_btn.bind("<Leave>", lambda e: manage_btn.configure(bg=colors.get("primary", "#3B82F6")))
+    
+    def _open_backup_manager(self):
+        """Open the backup manager dialog"""
+        from app.ui.backup_manager import BackupManager
+        backup_manager = BackupManager(self.app)
+        backup_manager.show_backup_dialog()
     
     def _create_experimental_section(self, parent, colors):
         """Create experimental features section showing feature flags"""
