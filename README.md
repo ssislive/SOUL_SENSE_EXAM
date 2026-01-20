@@ -836,6 +836,45 @@ python -m alembic revision --autogenerate -m "describe_change"
 **Verify Migrations:**
 Our test suite includes `tests/test_migrations.py` which guarantees that migrations apply correctly to a fresh database.
 
+### 4. Test Fixtures (Issue #348)
+
+SoulSense provides a comprehensive test fixture system for standardized, reusable test data.
+
+**Available Fixtures:**
+
+| Category | Fixtures |
+|----------|----------|
+| **Database Entities** | `sample_user`, `sample_user_with_profiles`, `sample_score`, `sample_responses`, `sample_journal_entry`, `sample_question_bank` |
+| **ML Components** | `sample_user_features`, `sample_clustered_features`, `mock_clusterer`, `mock_feature_extractor`, `mock_risk_predictor` |
+| **Utilities** | `temp_db` (isolated database), `isolated_db`, `populated_db` |
+
+**Factory Classes:**
+
+```python
+from tests.fixtures import UserFactory, ScoreFactory, FeatureDataFactory
+
+# Create test user with all profiles
+user = UserFactory.create_with_profiles(session)
+
+# Create batch of scores
+scores = ScoreFactory.create_batch(session, user, count=10)
+
+# Generate ML feature data
+features = FeatureDataFactory.create_user_features(n_users=50)
+```
+
+**Using Fixtures in Tests:**
+
+```python
+def test_user_scores(temp_db, sample_user):
+    """Fixtures are automatically available to all tests."""
+    from tests.fixtures import ScoreFactory
+    scores = ScoreFactory.create_batch(temp_db, sample_user, count=5)
+    assert len(scores) == 5
+```
+
+For complete documentation, see [tests/FIXTURES.md](tests/FIXTURES.md).
+
 ---
 
 ## 📊 Outlier Detection Features

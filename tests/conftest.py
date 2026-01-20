@@ -1,3 +1,31 @@
+"""
+Pytest configuration and shared fixtures for SOUL_SENSE_EXAM tests.
+
+This module provides core test infrastructure including:
+- Database fixtures (temp_db for isolated testing)
+- UI mocking fixtures (Tkinter variable mocks)
+- Mock application controller
+
+For additional fixtures including factory classes and ML mocks,
+see tests/fixtures.py which provides:
+- UserFactory, ScoreFactory, ResponseFactory, etc.
+- FeatureDataFactory for ML feature datasets
+- MockMLComponents for clustering and prediction mocks
+- Pre-defined pytest fixtures (sample_user, sample_score, etc.)
+
+Usage:
+    # Use temp_db for database isolation
+    def test_something(temp_db):
+        user = User(username="test", password_hash="hash")
+        temp_db.add(user)
+        temp_db.commit()
+    
+    # Use factories from fixtures module
+    from tests.fixtures import UserFactory, ScoreFactory
+    def test_with_factory(temp_db):
+        user = UserFactory.create_with_profiles(temp_db)
+"""
+
 import pytest
 import os
 import sys
@@ -5,6 +33,30 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.models import Base
 import tkinter as tk
+
+# Import fixtures for re-export (allows using them without explicit import)
+# These fixtures will be automatically available to all tests
+from tests.fixtures import (
+    # Database entity fixtures
+    sample_user,
+    sample_user_with_profiles,
+    sample_score,
+    sample_scores_batch,
+    sample_responses,
+    sample_journal_entry,
+    sample_question_bank,
+    # ML fixtures
+    sample_user_features,
+    sample_clustered_features,
+    mock_score,
+    mock_response,
+    mock_clusterer,
+    mock_feature_extractor,
+    mock_risk_predictor,
+    # Utility fixtures
+    isolated_db,
+    populated_db,
+)
 
 # --- DATABASE FIXTURES ---
 
